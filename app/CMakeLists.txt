@@ -6,6 +6,23 @@ add_executable(app)
 
 target_sources(app
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Layer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Layer.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/load_images.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/load_images.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/load_labels.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/load_labels.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/NeuralNetwork.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/NeuralNetwork.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Neuron.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Neuron.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/ScopedTimer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/ScopedTimer.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/swap_endian.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/swap_endian.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Timer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Timer.hpp
+
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
 )
 
@@ -23,6 +40,7 @@ set_target_properties(app
 
 target_link_libraries(app
     PRIVATE
+        cmrc_dataset
         common::warnings_as_errors
         fmt::fmt
 )
