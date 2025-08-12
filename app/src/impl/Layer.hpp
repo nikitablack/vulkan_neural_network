@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/Dense>
 #include <functional>
 #include <impl/Neuron.hpp>
 #include <vector>
@@ -8,9 +9,9 @@ namespace impl {
 
 class Layer {
 public:
-    Layer() = default;
+    Layer() noexcept = default;
 
-    Layer(size_t neuronCount, size_t inputCountArg) noexcept;
+    Layer(size_t neuronCount, size_t inputCount) noexcept;
 
 public:
     [[nodiscard]] auto activate(Layer const& prevLayer,  //
@@ -19,12 +20,15 @@ public:
 
     [[nodiscard]] auto update(Layer const& prevLayer,  //
                               double learningRate,  //
-                              std::vector<double> const& delta  //
+                              Eigen::MatrixXd const& delta  //
                               ) noexcept -> bool;
 
+    size_t size() const noexcept;
+
 public:
-    std::vector<Neuron> neurons{};
-    size_t inputCount{0};
+    Eigen::MatrixXd weights{};
+    Eigen::MatrixXd biases{};
+    Eigen::MatrixXd values{};
 };
 
 }  // namespace impl

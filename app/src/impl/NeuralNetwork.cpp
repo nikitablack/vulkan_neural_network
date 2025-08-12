@@ -34,13 +34,14 @@ auto NeuralNetwork::forward(std::vector<double> const& inputValues,  //
                             ) noexcept -> bool {
     auto& inputLayer{layers.front()};
 
-    if (inputValues.size() != inputLayer.neurons.size()) {
-        return false;  // Mismatch in input size
+    if (inputValues.size() != inputLayer.size()) {
+        return false;  // mismatch in input size
     }
 
-    for (size_t i{0}; i < inputLayer.neurons.size(); ++i) {
-        inputLayer.neurons[i].value = inputValues[i];
-    }
+    // copy input values to the input layer
+    inputLayer.values.col(0).segment(0, inputValues.size()) =
+        Eigen::Map<const Eigen::VectorXd>{inputValues.data(),  //
+                                          static_cast<Eigen::Index>(inputValues.size())};
 
     for (size_t i{1}; i < layers.size(); ++i) {
         auto& currLayer{layers[i]};
@@ -53,10 +54,9 @@ auto NeuralNetwork::forward(std::vector<double> const& inputValues,  //
 
     auto const& outputLayer{layers.back()};
 
-    outputValues.resize(outputLayer.neurons.size());
-    for (size_t i{0}; i < outputLayer.neurons.size(); ++i) {
-        outputValues[i] = outputLayer.neurons[i].value;
-    }
+    outputValues.resize(outputLayer.size());
+    outputValues.assign(outputLayer.values.col(0).data(),  //
+                        outputLayer.values.col(0).data() + outputLayer.size());
 
     return true;
 }
@@ -92,14 +92,15 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
 
             auto const& outputLayer{layers.back()};
 
-            std::vector<double> expectedOutput(outputLayer.neurons.size(), 0.0);
+            std::vector<double> expectedOutput(outputLayer.size(), 0.0);
             expectedOutput[target[idx]] = 1.0;
 
             double loss{0.0};
             for (size_t j{0}; j < output.size(); ++j) {
-                loss += (output[j] - expectedOutput[j]) * (output[j] - expectedOutput[j]);
+                double const diff{expectedOutput[j] - output[j]};
+                loss += diff * diff;
             }
-            loss *= 0.5;  // Mean squared error
+            loss /= output.size();  // Mean squared error
 
             epochLoss += loss;
 
@@ -127,14 +128,17 @@ auto NeuralNetwork::backward(std::vector<double> const& output,  //
 
     auto& outputLayer{layers.back()};
 
-    if (output.size() != outputLayer.neurons.size()) {
+    if (output.size() != outputLayer.size()) {
         return false;  // Mismatch in output layer size
     }
 
     // update output layer
-    std::vector<double> deltaOutput(output.size());
+    Eigen::MatrixXd deltaOutput{output.size(), 1};
     for (size_t i{0}; i < output.size(); ++i) {
-        deltaOutput[i] = (output[i] - expectedOutput[i]) * sigmoidDerivative(output[i]);
+        double const a{output[i]};
+        double const dCdA{2.0 * (a - expectedOutput[i]) / output.size()};
+        double const dAdZ{sigmoidDerivative(a)};
+        deltaOutput(static_cast<Eigen::Index>(i), 0) = dCdA * dAdZ;
     }
 
     {
@@ -155,21 +159,10 @@ auto NeuralNetwork::backward(std::vector<double> const& output,  //
             auto& currLayer{layers[lay]};
             auto const& leftLayer{layers[lay - 1]};
 
-            std::vector<double> deltaHidden(rightLayer->inputCount);
-
-            // delta.size == rightLayer.neurons.size
-            // currLayer.neurons.size == rightLayer.neurons[X].weights.size
-            for (size_t i{0}; i < currLayer.neurons.size(); ++i) {
-                double deltaSum{0.0};
-
-                for (size_t j{0}; j < rightLayer->neurons.size(); ++j) {
-                    auto& neuron{rightLayer->neurons[j]};
-
-                    deltaSum += delta[j] * neuron.weights[i];
-                }
-
-                deltaHidden[i] = deltaSum * sigmoidDerivative(currLayer.neurons[i].value);
-            }
+            Eigen::MatrixXd const WT{rightLayer->weights.transpose()};
+            Eigen::MatrixXd WTD{WT * delta};
+            Eigen::MatrixXd dZ{currLayer.values.unaryExpr(&sigmoidDerivative)};
+            Eigen::MatrixXd deltaHidden{WTD.cwiseProduct(dZ)};
 
             if (!currLayer.update(leftLayer, learningRate, deltaHidden)) {
                 return false;
@@ -188,8 +181,8 @@ auto NeuralNetwork::sigmoid(double v) noexcept -> double {
     return 1.0 / (1.0 + std::exp(-v));
 }
 
-auto NeuralNetwork::sigmoidDerivative(double v) noexcept -> double {
-    return v * (1.0 - v);
+auto NeuralNetwork::sigmoidDerivative(double sigmoidResult) noexcept -> double {
+    return sigmoidResult * (1.0 - sigmoidResult);
 }
 
 }  // namespace impl

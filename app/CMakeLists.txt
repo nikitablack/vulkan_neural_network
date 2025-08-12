@@ -42,5 +42,7 @@ target_link_libraries(app
     PRIVATE
         cmrc_dataset
         common::warnings_as_errors
+        Eigen3::Eigen
         fmt::fmt
 )
+

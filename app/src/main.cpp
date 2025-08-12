@@ -23,7 +23,7 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
 
     impl::NeuralNetwork nn{std::vector<size_t>{784, 8, 10}};
     size_t constexpr EPOCH_COUNT{10};
-    double constexpr LEARNING_RATE{0.01};
+    double constexpr LEARNING_RATE{3.0};
 
     if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
         fmt::println("Failed to train neural network.");
