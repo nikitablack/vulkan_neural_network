@@ -13,37 +13,37 @@ namespace {
     auto nn{NeuralNetwork{std::vector<size_t>{2, 2, 2, 2}}};
 
     auto& layer0{nn.layers[0]};
-    layer0.values(0, 0) = static_cast<Float>(1.0);
-    layer0.values(1, 0) = static_cast<Float>(2.0);
+    layer0.values(0, 0) = 1.0_F;
+    layer0.values(1, 0) = 2.0_F;
 
     auto& layer1{nn.layers[1]};
-    layer1.weights(0, 0) = static_cast<Float>(0.1);
-    layer1.weights(0, 1) = static_cast<Float>(0.1);
-    layer1.weights(1, 0) = static_cast<Float>(0.2);
-    layer1.weights(1, 1) = static_cast<Float>(0.2);
-    layer1.biases(0, 0) = static_cast<Float>(0.1);
-    layer1.biases(1, 0) = static_cast<Float>(0.2);
+    layer1.weights(0, 0) = 0.1_F;
+    layer1.weights(0, 1) = 0.1_F;
+    layer1.weights(1, 0) = 0.2_F;
+    layer1.weights(1, 1) = 0.2_F;
+    layer1.biases(0, 0) = 0.1_F;
+    layer1.biases(1, 0) = 0.2_F;
 
     auto& layer2{nn.layers[2]};
-    layer2.weights(0, 0) = static_cast<Float>(0.3);
-    layer2.weights(0, 1) = static_cast<Float>(0.3);
-    layer2.weights(1, 0) = static_cast<Float>(0.4);
-    layer2.weights(1, 1) = static_cast<Float>(0.4);
-    layer2.biases(0, 0) = static_cast<Float>(0.3);
-    layer2.biases(1, 0) = static_cast<Float>(0.4);
+    layer2.weights(0, 0) = 0.3_F;
+    layer2.weights(0, 1) = 0.3_F;
+    layer2.weights(1, 0) = 0.4_F;
+    layer2.weights(1, 1) = 0.4_F;
+    layer2.biases(0, 0) = 0.3_F;
+    layer2.biases(1, 0) = 0.4_F;
 
     auto& layer3{nn.layers[3]};
-    layer3.weights(0, 0) = static_cast<Float>(0.5);
-    layer3.weights(0, 1) = static_cast<Float>(0.5);
-    layer3.weights(1, 0) = static_cast<Float>(0.6);
-    layer3.weights(1, 1) = static_cast<Float>(0.6);
-    layer3.biases(0, 0) = static_cast<Float>(0.5);
-    layer3.biases(1, 0) = static_cast<Float>(0.6);
+    layer3.weights(0, 0) = 0.5_F;
+    layer3.weights(0, 1) = 0.5_F;
+    layer3.weights(1, 0) = 0.6_F;
+    layer3.weights(1, 1) = 0.6_F;
+    layer3.biases(0, 0) = 0.5_F;
+    layer3.biases(1, 0) = 0.6_F;
 
-    std::vector<std::vector<Float>> input{{static_cast<Float>(1.0), static_cast<Float>(2.0)}};
+    std::vector<std::vector<Float>> input{{1.0_F, 2.0_F}};
     std::vector<Float> output{};
 
-    [[maybe_unused]] auto result{nn.train(input, {1}, 2, static_cast<Float>(0.1))};
+    [[maybe_unused]] auto result{nn.train(input, {1}, 2, 0.1_F)};
 
     return nn;
 }

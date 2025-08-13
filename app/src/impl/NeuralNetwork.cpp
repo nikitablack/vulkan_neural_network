@@ -147,7 +147,7 @@ auto NeuralNetwork::backward(std::vector<Float> const& output,  //
     Layer::MatrixX deltaOutput{output.size(), 1};
     for (size_t i{0}; i < output.size(); ++i) {
         Float const a{output[i]};
-        Float const dCdA{static_cast<Float>(2.0) * (a - expectedOutput[i]) / output.size()};
+        Float const dCdA{static_cast<Float>(2) * (a - expectedOutput[i]) / output.size()};
         Float const dAdZ{sigmoidDerivative(a)};
         deltaOutput(static_cast<Eigen::Index>(i), 0) = dCdA * dAdZ;
     }
@@ -189,11 +189,11 @@ auto NeuralNetwork::backward(std::vector<Float> const& output,  //
 }
 
 auto NeuralNetwork::sigmoid(Float v) noexcept -> Float {
-    return static_cast<Float>(1.0) / (static_cast<Float>(1.0) + std::exp(-v));
+    return static_cast<Float>(1) / (static_cast<Float>(1) + std::exp(-v));
 }
 
 auto NeuralNetwork::sigmoidDerivative(Float sigmoidResult) noexcept -> Float {
-    return sigmoidResult * (static_cast<Float>(1.0) - sigmoidResult);
+    return sigmoidResult * (static_cast<Float>(1) - sigmoidResult);
 }
 
 }  // namespace impl

@@ -34,7 +34,7 @@ auto load_images(std::string const& name) noexcept -> std::vector<std::vector<Fl
     std::vector<std::vector<Float>> images(imageCount, std::vector<Float>(rows * cols));
     for (size_t i{0}; i < imageCount; ++i) {
         for (size_t j{0}; j < rows * cols; ++j) {
-            images[i][j] = static_cast<Float>(imagesByte[i][j]) / static_cast<Float>(255.0);  // Normalize to [0, 1]
+            images[i][j] = static_cast<Float>(imagesByte[i][j]) / static_cast<Float>(255);  // Normalize to [0, 1]
         }
     }
 
