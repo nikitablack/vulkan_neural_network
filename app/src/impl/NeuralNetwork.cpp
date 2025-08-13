@@ -2,6 +2,7 @@
 
 #include <impl/NeuralNetwork.hpp>
 #include <impl/ScopedTimer.hpp>
+#include <iostream>
 #include <random>
 #include <stdexcept>
 
@@ -90,6 +91,28 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
                 return false;
             }
 
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            {
+                std::cout << "Before " << epoch << "\n";
+
+                for (size_t k{1}; k < layers.size(); ++k) {
+                    auto& layer{layers[k]};
+                    std::cout << "Layer " << k << "\n";
+                    size_t neuronIndex{0};
+                    for (const auto& neuron : layer.neurons) {
+                        std::cout << neuronIndex++ << " Weights: ";
+                        for (const auto& weight : neuron.weights) {
+                            std::cout << weight << " ";
+                        }
+                        std::cout << "\n";
+                        std::cout << "  Bias: " << neuron.bias << "\n";
+                        std::cout << "  Value: " << neuron.value << "\n";
+                    }
+                    std::cout << "\n";
+                }
+            }
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
             auto const& outputLayer{layers.back()};
 
             std::vector<double> expectedOutput(outputLayer.neurons.size(), 0.0);
@@ -97,15 +120,38 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
 
             double loss{0.0};
             for (size_t j{0}; j < output.size(); ++j) {
-                loss += (output[j] - expectedOutput[j]) * (output[j] - expectedOutput[j]);
+                double const diff{expectedOutput[j] - output[j]};
+                loss += diff * diff;
             }
-            loss *= 0.5;  // Mean squared error
+            loss /= output.size();  // Mean squared error
 
             epochLoss += loss;
 
             if (!backward(output, expectedOutput, learningRate)) {
                 return false;  // Backward pass failed
             }
+
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            {
+                std::cout << "After " << epoch << "\n";
+
+                for (size_t k{1}; k < layers.size(); ++k) {
+                    auto& layer{layers[k]};
+                    std::cout << "Layer " << k << "\n";
+                    size_t neuronIndex{0};
+                    for (const auto& neuron : layer.neurons) {
+                        std::cout << neuronIndex++ << " Weights: ";
+                        for (const auto& weight : neuron.weights) {
+                            std::cout << weight << " ";
+                        }
+                        std::cout << "\n";
+                        std::cout << "  Bias: " << neuron.bias << "\n";
+                        std::cout << "  Value: " << neuron.value << "\n";
+                    }
+                    std::cout << "\n";
+                }
+            }
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         }
 
         shuffle_indices(indices);
@@ -134,7 +180,10 @@ auto NeuralNetwork::backward(std::vector<double> const& output,  //
     // update output layer
     std::vector<double> deltaOutput(output.size());
     for (size_t i{0}; i < output.size(); ++i) {
-        deltaOutput[i] = (output[i] - expectedOutput[i]) * sigmoidDerivative(output[i]);
+        double const a{output[i]};
+        double const dCdA{2.0 * (a - expectedOutput[i]) / output.size()};
+        double const dAdZ{sigmoidDerivative(a)};
+        deltaOutput[i] = dCdA * dAdZ;
     }
 
     {
@@ -188,8 +237,8 @@ auto NeuralNetwork::sigmoid(double v) noexcept -> double {
     return 1.0 / (1.0 + std::exp(-v));
 }
 
-auto NeuralNetwork::sigmoidDerivative(double v) noexcept -> double {
-    return v * (1.0 - v);
+auto NeuralNetwork::sigmoidDerivative(double sigmoidResult) noexcept -> double {
+    return sigmoidResult * (1.0 - sigmoidResult);
 }
 
 }  // namespace impl
