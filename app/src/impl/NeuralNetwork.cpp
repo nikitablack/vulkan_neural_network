@@ -2,6 +2,7 @@
 
 #include <impl/NeuralNetwork.hpp>
 #include <impl/ScopedTimer.hpp>
+#include <iostream>
 #include <random>
 #include <stdexcept>
 
@@ -90,6 +91,25 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
                 return false;
             }
 
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            {
+                std::cout << "Before " << epoch << "\n";
+
+                for (size_t k{1}; k < layers.size(); ++k) {
+                    auto& layer{layers[k]};
+                    std::cout << "Layer " << k << "\n";
+
+                    std::cout << " Weights:\n";
+                    std::cout << layer.weights << "\n";
+                    std::cout << "  Biases:\n";
+                    std::cout << layer.biases << "\n";
+                    std::cout << "  Values:\n";
+                    std::cout << layer.values << "\n";
+                    std::cout << "\n";
+                }
+            }
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
             auto const& outputLayer{layers.back()};
 
             std::vector<double> expectedOutput(outputLayer.size(), 0.0);
@@ -107,6 +127,25 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
             if (!backward(output, expectedOutput, learningRate)) {
                 return false;  // Backward pass failed
             }
+
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            {
+                std::cout << "After " << epoch << "\n";
+
+                for (size_t k{1}; k < layers.size(); ++k) {
+                    auto& layer{layers[k]};
+                    std::cout << "Layer " << k << "\n";
+
+                    std::cout << " Weights:\n";
+                    std::cout << layer.weights << "\n";
+                    std::cout << "  Biases:\n";
+                    std::cout << layer.biases << "\n";
+                    std::cout << "  Values:\n";
+                    std::cout << layer.values << "\n";
+                    std::cout << "\n";
+                }
+            }
+            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         }
 
         shuffle_indices(indices);
