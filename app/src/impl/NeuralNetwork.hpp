@@ -24,6 +24,8 @@ private:
                                 double learningRate  //
                                 ) noexcept -> bool;
 
+    auto print() const noexcept -> void;
+
 public:
     static auto sigmoid(double v) noexcept -> double;
     static auto sigmoidDerivative(double v) noexcept -> double;

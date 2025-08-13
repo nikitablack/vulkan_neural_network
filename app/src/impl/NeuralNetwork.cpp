@@ -91,25 +91,6 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
                 return false;
             }
 
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            {
-                std::cout << "Before " << epoch << "\n";
-
-                for (size_t k{1}; k < layers.size(); ++k) {
-                    auto& layer{layers[k]};
-                    std::cout << "Layer " << k << "\n";
-
-                    std::cout << " Weights:\n";
-                    std::cout << layer.weights << "\n";
-                    std::cout << "  Biases:\n";
-                    std::cout << layer.biases << "\n";
-                    std::cout << "  Values:\n";
-                    std::cout << layer.values << "\n";
-                    std::cout << "\n";
-                }
-            }
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
             auto const& outputLayer{layers.back()};
 
             std::vector<double> expectedOutput(outputLayer.size(), 0.0);
@@ -127,25 +108,6 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
             if (!backward(output, expectedOutput, learningRate)) {
                 return false;  // Backward pass failed
             }
-
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            {
-                std::cout << "After " << epoch << "\n";
-
-                for (size_t k{1}; k < layers.size(); ++k) {
-                    auto& layer{layers[k]};
-                    std::cout << "Layer " << k << "\n";
-
-                    std::cout << " Weights:\n";
-                    std::cout << layer.weights << "\n";
-                    std::cout << "  Biases:\n";
-                    std::cout << layer.biases << "\n";
-                    std::cout << "  Values:\n";
-                    std::cout << layer.values << "\n";
-                    std::cout << "\n";
-                }
-            }
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         }
 
         shuffle_indices(indices);
@@ -155,6 +117,16 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
     }
 
     return true;
+}
+
+auto NeuralNetwork::print() const noexcept -> void {
+    for (size_t i{1}; i < layers.size(); ++i) {
+        auto const& layer{layers[i]};
+        std::cout << "Layer " << i << "\n";
+        std::cout << "Weights:\n" << layer.weights << "\n";
+        std::cout << "Biases:\n" << layer.biases << "\n";
+        std::cout << "Values:\n" << layer.values << "\n";
+    }
 }
 
 auto NeuralNetwork::backward(std::vector<double> const& output,  //

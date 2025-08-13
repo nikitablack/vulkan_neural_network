@@ -49,7 +49,7 @@ namespace {
 }  // namespace
 
 auto main(int /* argc */, char* /* argv */[]) -> int {
-    run_test_network();
+    // run_test_network();
 
     auto const labels{impl::load_labels("train-labels.idx1-ubyte")};
     auto const images{impl::load_images("train-images.idx3-ubyte")};
