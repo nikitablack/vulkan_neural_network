@@ -10,7 +10,7 @@ Layer::Layer(size_t neuronCount, size_t inputCount) noexcept
     if (inputCount > 0) {
         std::random_device rd{};
         std::mt19937 gen{rd()};
-        std::uniform_real_distribution<double> dist{-1.0, 1.0};
+        std::uniform_real_distribution<Float> dist{-1.0, 1.0};
 
         for (Eigen::Index r{0}; r < weights.rows(); ++r) {
             for (Eigen::Index c{0}; c < weights.cols(); ++c) {
@@ -25,7 +25,7 @@ Layer::Layer(size_t neuronCount, size_t inputCount) noexcept
 }
 
 [[nodiscard]] auto Layer::activate(Layer const& prevLayer,  //
-                                   std::function<auto(double)->double> const& activationFunction  //
+                                   std::function<auto(Float)->Float> const& activationFunction  //
                                    ) noexcept -> bool {
     if (weights.cols() != prevLayer.values.rows()) {
         fmt::println("Mismatch between values size and weights size.");
@@ -41,14 +41,14 @@ Layer::Layer(size_t neuronCount, size_t inputCount) noexcept
 }
 
 [[nodiscard]] auto Layer::update(Layer const& prevLayer,  //
-                                 double learningRate,  //
-                                 Eigen::MatrixXd const& delta  //
+                                 Float learningRate,  //
+                                 MatrixX const& delta  //
                                  ) noexcept -> bool {
     if (static_cast<size_t>(delta.rows()) != size()) {
         return false;  // Mismatch in delta size
     }
 
-    Eigen::MatrixXd const gradient{delta * prevLayer.values.transpose()};
+    MatrixX const gradient{delta * prevLayer.values.transpose()};
 
     weights -= learningRate * gradient;
     biases -= learningRate * delta;

@@ -6,6 +6,7 @@ add_executable(app)
 
 target_sources(app
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Float.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Layer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Layer.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/load_images.cpp
@@ -14,8 +15,6 @@ target_sources(app
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/load_labels.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/NeuralNetwork.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/NeuralNetwork.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Neuron.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Neuron.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/ScopedTimer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/ScopedTimer.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/swap_endian.cpp

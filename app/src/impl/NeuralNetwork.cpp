@@ -30,8 +30,8 @@ NeuralNetwork::NeuralNetwork(std::vector<size_t> const& layerSizes) {
     }
 }
 
-auto NeuralNetwork::forward(std::vector<double> const& inputValues,  //
-                            std::vector<double>& outputValues  //
+auto NeuralNetwork::forward(std::vector<Float> const& inputValues,  //
+                            std::vector<Float>& outputValues  //
                             ) noexcept -> bool {
     auto& inputLayer{layers.front()};
 
@@ -41,8 +41,8 @@ auto NeuralNetwork::forward(std::vector<double> const& inputValues,  //
 
     // copy input values to the input layer
     inputLayer.values.col(0).segment(0, inputValues.size()) =
-        Eigen::Map<const Eigen::VectorXd>{inputValues.data(),  //
-                                          static_cast<Eigen::Index>(inputValues.size())};
+        Eigen::Map<const Layer::VectorX>{inputValues.data(),  //
+                                         static_cast<Eigen::Index>(inputValues.size())};
 
     for (size_t i{1}; i < layers.size(); ++i) {
         auto& currLayer{layers[i]};
@@ -62,17 +62,17 @@ auto NeuralNetwork::forward(std::vector<double> const& inputValues,  //
     return true;
 }
 
-auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0-1.0
+auto NeuralNetwork::train(std::vector<std::vector<Float>> const& input,  // 0.0-1.0
                           std::vector<uint8_t> const& target,  // 0-9
                           size_t epochCount,  //
-                          double learningRate  //
+                          Float learningRate  //
                           ) noexcept -> bool {
     if (input.size() != target.size()) {
         fmt::println("Mismatch between input size and target size.");
         return false;
     }
 
-    std::vector<double> output{};  // buffer for multiple forward passes
+    std::vector<Float> output{};  // buffer for multiple forward passes
 
     std::vector<size_t> indices(input.size());  // Indices for shuffling
     std::iota(indices.begin(), indices.end(), 0);
@@ -81,7 +81,7 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
     for (size_t epoch{0}; epoch < epochCount; ++epoch) {
         ScopedTimer t2{fmt::format("Epoch {}: ", epoch)};
 
-        double epochLoss{0.0};
+        Float epochLoss{0.0};
 
         for (size_t i{0}; i < indices.size(); ++i) {
             auto const idx{indices[i]};
@@ -93,12 +93,12 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
 
             auto const& outputLayer{layers.back()};
 
-            std::vector<double> expectedOutput(outputLayer.size(), 0.0);
+            std::vector<Float> expectedOutput(outputLayer.size(), 0.0);
             expectedOutput[target[idx]] = 1.0;
 
-            double loss{0.0};
+            Float loss{0.0};
             for (size_t j{0}; j < output.size(); ++j) {
-                double const diff{expectedOutput[j] - output[j]};
+                Float const diff{expectedOutput[j] - output[j]};
                 loss += diff * diff;
             }
             loss /= output.size();  // Mean squared error
@@ -112,7 +112,7 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
 
         shuffle_indices(indices);
 
-        double const averageLoss{epochLoss / input.size()};
+        Float const averageLoss{epochLoss / input.size()};
         fmt::println("Epoch {} average loss: {}", epoch, averageLoss);
     }
 
@@ -129,9 +129,9 @@ auto NeuralNetwork::print() const noexcept -> void {
     }
 }
 
-auto NeuralNetwork::backward(std::vector<double> const& output,  //
-                             std::vector<double> const& expectedOutput,  //
-                             double learningRate  //
+auto NeuralNetwork::backward(std::vector<Float> const& output,  //
+                             std::vector<Float> const& expectedOutput,  //
+                             Float learningRate  //
                              ) noexcept -> bool {
     if (output.size() != expectedOutput.size()) {
         return false;  // Mismatch in output size
@@ -144,11 +144,11 @@ auto NeuralNetwork::backward(std::vector<double> const& output,  //
     }
 
     // update output layer
-    Eigen::MatrixXd deltaOutput{output.size(), 1};
+    Layer::MatrixX deltaOutput{output.size(), 1};
     for (size_t i{0}; i < output.size(); ++i) {
-        double const a{output[i]};
-        double const dCdA{2.0 * (a - expectedOutput[i]) / output.size()};
-        double const dAdZ{sigmoidDerivative(a)};
+        Float const a{output[i]};
+        Float const dCdA{static_cast<Float>(2.0) * (a - expectedOutput[i]) / output.size()};
+        Float const dAdZ{sigmoidDerivative(a)};
         deltaOutput(static_cast<Eigen::Index>(i), 0) = dCdA * dAdZ;
     }
 
@@ -170,10 +170,10 @@ auto NeuralNetwork::backward(std::vector<double> const& output,  //
             auto& currLayer{layers[lay]};
             auto const& leftLayer{layers[lay - 1]};
 
-            Eigen::MatrixXd const WT{rightLayer->weights.transpose()};
-            Eigen::MatrixXd WTD{WT * delta};
-            Eigen::MatrixXd dZ{currLayer.values.unaryExpr(&sigmoidDerivative)};
-            Eigen::MatrixXd deltaHidden{WTD.cwiseProduct(dZ)};
+            Layer::MatrixX const WT{rightLayer->weights.transpose()};
+            Layer::MatrixX WTD{WT * delta};
+            Layer::MatrixX dZ{currLayer.values.unaryExpr(&sigmoidDerivative)};
+            Layer::MatrixX deltaHidden{WTD.cwiseProduct(dZ)};
 
             if (!currLayer.update(leftLayer, learningRate, deltaHidden)) {
                 return false;
@@ -188,12 +188,12 @@ auto NeuralNetwork::backward(std::vector<double> const& output,  //
     return true;
 }
 
-auto NeuralNetwork::sigmoid(double v) noexcept -> double {
-    return 1.0 / (1.0 + std::exp(-v));
+auto NeuralNetwork::sigmoid(Float v) noexcept -> Float {
+    return static_cast<Float>(1.0) / (static_cast<Float>(1.0) + std::exp(-v));
 }
 
-auto NeuralNetwork::sigmoidDerivative(double sigmoidResult) noexcept -> double {
-    return sigmoidResult * (1.0 - sigmoidResult);
+auto NeuralNetwork::sigmoidDerivative(Float sigmoidResult) noexcept -> Float {
+    return sigmoidResult * (static_cast<Float>(1.0) - sigmoidResult);
 }
 
 }  // namespace impl

@@ -2,12 +2,16 @@
 
 #include <Eigen/Dense>
 #include <functional>
-#include <impl/Neuron.hpp>
+#include <impl/Float.hpp>
 #include <vector>
 
 namespace impl {
 
 class Layer {
+public:
+    using MatrixX = Eigen::Matrix<Float, Eigen::Dynamic, Eigen::Dynamic>;
+    using VectorX = Eigen::Matrix<Float, Eigen::Dynamic, 1>;
+
 public:
     Layer() noexcept = default;
 
@@ -15,20 +19,20 @@ public:
 
 public:
     [[nodiscard]] auto activate(Layer const& prevLayer,  //
-                                std::function<auto(double)->double> const& activationFunction  //
+                                std::function<auto(Float)->Float> const& activationFunction  //
                                 ) noexcept -> bool;
 
     [[nodiscard]] auto update(Layer const& prevLayer,  //
-                              double learningRate,  //
-                              Eigen::MatrixXd const& delta  //
+                              Float learningRate,  //
+                              MatrixX const& delta  //
                               ) noexcept -> bool;
 
     size_t size() const noexcept;
 
 public:
-    Eigen::MatrixXd weights{};
-    Eigen::MatrixXd biases{};
-    Eigen::MatrixXd values{};
+    MatrixX weights{};
+    MatrixX biases{};
+    MatrixX values{};
 };
 
 }  // namespace impl

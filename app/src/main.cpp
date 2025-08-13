@@ -8,40 +8,42 @@
 namespace {
 
 [[maybe_unused]] auto run_test_network() -> impl::NeuralNetwork {
-    auto nn{impl::NeuralNetwork{std::vector<size_t>{2, 2, 2, 2}}};
+    using namespace impl;
+
+    auto nn{NeuralNetwork{std::vector<size_t>{2, 2, 2, 2}}};
 
     auto& layer0{nn.layers[0]};
-    layer0.values(0, 0) = 1.0;
-    layer0.values(1, 0) = 2.0;
+    layer0.values(0, 0) = static_cast<Float>(1.0);
+    layer0.values(1, 0) = static_cast<Float>(2.0);
 
     auto& layer1{nn.layers[1]};
-    layer1.weights(0, 0) = 0.1;
-    layer1.weights(0, 1) = 0.1;
-    layer1.weights(1, 0) = 0.2;
-    layer1.weights(1, 1) = 0.2;
-    layer1.biases(0, 0) = 0.1;
-    layer1.biases(1, 0) = 0.2;
+    layer1.weights(0, 0) = static_cast<Float>(0.1);
+    layer1.weights(0, 1) = static_cast<Float>(0.1);
+    layer1.weights(1, 0) = static_cast<Float>(0.2);
+    layer1.weights(1, 1) = static_cast<Float>(0.2);
+    layer1.biases(0, 0) = static_cast<Float>(0.1);
+    layer1.biases(1, 0) = static_cast<Float>(0.2);
 
     auto& layer2{nn.layers[2]};
-    layer2.weights(0, 0) = 0.3;
-    layer2.weights(0, 1) = 0.3;
-    layer2.weights(1, 0) = 0.4;
-    layer2.weights(1, 1) = 0.4;
-    layer2.biases(0, 0) = 0.3;
-    layer2.biases(1, 0) = 0.4;
+    layer2.weights(0, 0) = static_cast<Float>(0.3);
+    layer2.weights(0, 1) = static_cast<Float>(0.3);
+    layer2.weights(1, 0) = static_cast<Float>(0.4);
+    layer2.weights(1, 1) = static_cast<Float>(0.4);
+    layer2.biases(0, 0) = static_cast<Float>(0.3);
+    layer2.biases(1, 0) = static_cast<Float>(0.4);
 
     auto& layer3{nn.layers[3]};
-    layer3.weights(0, 0) = 0.5;
-    layer3.weights(0, 1) = 0.5;
-    layer3.weights(1, 0) = 0.6;
-    layer3.weights(1, 1) = 0.6;
-    layer3.biases(0, 0) = 0.5;
-    layer3.biases(1, 0) = 0.6;
+    layer3.weights(0, 0) = static_cast<Float>(0.5);
+    layer3.weights(0, 1) = static_cast<Float>(0.5);
+    layer3.weights(1, 0) = static_cast<Float>(0.6);
+    layer3.weights(1, 1) = static_cast<Float>(0.6);
+    layer3.biases(0, 0) = static_cast<Float>(0.5);
+    layer3.biases(1, 0) = static_cast<Float>(0.6);
 
-    std::vector<std::vector<double>> input{{1.0, 2.0}};
-    std::vector<double> output{};
+    std::vector<std::vector<Float>> input{{static_cast<Float>(1.0), static_cast<Float>(2.0)}};
+    std::vector<Float> output{};
 
-    [[maybe_unused]] auto result{nn.train(input, {1}, 2, 0.1)};
+    [[maybe_unused]] auto result{nn.train(input, {1}, 2, static_cast<Float>(0.1))};
 
     return nn;
 }
@@ -66,9 +68,9 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
 
     fmt::println("Dataset size: {}.", labels.size());
 
-    impl::NeuralNetwork nn{std::vector<size_t>{784, 8, 10}};
-    size_t constexpr EPOCH_COUNT{10};
-    double constexpr LEARNING_RATE{3.0};
+    impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
+    size_t constexpr EPOCH_COUNT{20};
+    impl::Float constexpr LEARNING_RATE{1.0};
 
     if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
         fmt::println("Failed to train neural network.");
@@ -77,7 +79,7 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
 
     // test
     {
-        std::vector<double> output{};
+        std::vector<impl::Float> output{};
 
         auto const testLabels{impl::load_labels("t10k-labels.idx1-ubyte")};
         auto const testImages{impl::load_images("t10k-images.idx3-ubyte")};
