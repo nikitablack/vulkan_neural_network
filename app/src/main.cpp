@@ -8,34 +8,36 @@
 namespace {
 
 [[maybe_unused]] auto run_test_network() -> impl::NeuralNetwork {
+    using namespace impl;
+
     auto nn{impl::NeuralNetwork{std::vector<size_t>{2, 2, 2, 2}}};
 
     auto& layer0{nn.layers[0]};
-    layer0.neurons[0].value = 1.0;
-    layer0.neurons[1].value = 2.0;
+    layer0.neurons[0].value = 1.0_F;
+    layer0.neurons[1].value = 2.0_F;
 
     auto& layer1{nn.layers[1]};
-    layer1.neurons[0].weights = {0.1, 0.1};
-    layer1.neurons[0].bias = 0.1;
-    layer1.neurons[1].weights = {0.2, 0.2};
-    layer1.neurons[1].bias = 0.2;
+    layer1.neurons[0].weights = {0.1_F, 0.1_F};
+    layer1.neurons[0].bias = 0.1_F;
+    layer1.neurons[1].weights = {0.2_F, 0.2_F};
+    layer1.neurons[1].bias = 0.2_F;
 
     auto& layer2{nn.layers[2]};
-    layer2.neurons[0].weights = {0.3, 0.3};
-    layer2.neurons[0].bias = 0.3;
-    layer2.neurons[1].weights = {0.4, 0.4};
-    layer2.neurons[1].bias = 0.4;
+    layer2.neurons[0].weights = {0.3_F, 0.3_F};
+    layer2.neurons[0].bias = 0.3_F;
+    layer2.neurons[1].weights = {0.4_F, 0.4_F};
+    layer2.neurons[1].bias = 0.4_F;
 
     auto& layer3{nn.layers[3]};
-    layer3.neurons[0].weights = {0.5, 0.5};
-    layer3.neurons[0].bias = 0.5;
-    layer3.neurons[1].weights = {0.6, 0.6};
-    layer3.neurons[1].bias = 0.6;
+    layer3.neurons[0].weights = {0.5_F, 0.5_F};
+    layer3.neurons[0].bias = 0.5_F;
+    layer3.neurons[1].weights = {0.6_F, 0.6_F};
+    layer3.neurons[1].bias = 0.6_F;
 
-    std::vector<std::vector<double>> input{{1.0, 2.0}};
-    std::vector<double> output{};
+    std::vector<std::vector<Float>> input{{1.0_F, 2.0_F}};
+    std::vector<Float> output{};
 
-    [[maybe_unused]] auto result{nn.train(input, {1}, 2, 0.1)};
+    [[maybe_unused]] auto result{nn.train(input, {1}, 2, 0.1_F)};
 
     return nn;
 }
@@ -62,7 +64,7 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
 
     impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
     size_t constexpr EPOCH_COUNT{20};
-    double constexpr LEARNING_RATE{1.0};
+    impl::Float constexpr LEARNING_RATE{1.0};
 
     if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
         fmt::println("Failed to train neural network.");
@@ -71,7 +73,7 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
 
     // test
     {
-        std::vector<double> output{};
+        std::vector<impl::Float> output{};
 
         auto const testLabels{impl::load_labels("t10k-labels.idx1-ubyte")};
         auto const testImages{impl::load_images("t10k-images.idx3-ubyte")};

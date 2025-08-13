@@ -7,7 +7,7 @@ CMRC_DECLARE(cmrc_dataset);
 
 namespace impl {
 
-auto load_images(std::string const& name) noexcept -> std::vector<std::vector<double>> {
+auto load_images(std::string const& name) noexcept -> std::vector<std::vector<Float>> {
     auto const fs{cmrc::cmrc_dataset::get_filesystem()};
 
     auto imagesRaw{fs.open(name)};
@@ -31,10 +31,10 @@ auto load_images(std::string const& name) noexcept -> std::vector<std::vector<do
         std::memcpy(imagesByte[i].data(), imagesRaw.begin() + 16 + i * rows * cols, rows * cols);
     }
 
-    std::vector<std::vector<double>> images(imageCount, std::vector<double>(rows * cols));
+    std::vector<std::vector<Float>> images(imageCount, std::vector<Float>(rows * cols));
     for (size_t i{0}; i < imageCount; ++i) {
         for (size_t j{0}; j < rows * cols; ++j) {
-            images[i][j] = static_cast<double>(imagesByte[i][j]) / 255.0;  // Normalize to [0, 1]
+            images[i][j] = static_cast<Float>(imagesByte[i][j]) / static_cast<Float>(255);  // Normalize to [0, 1]
         }
     }
 

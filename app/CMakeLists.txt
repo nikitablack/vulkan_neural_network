@@ -6,6 +6,7 @@ add_executable(app)
 
 target_sources(app
     PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Float.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Layer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Layer.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/load_images.cpp

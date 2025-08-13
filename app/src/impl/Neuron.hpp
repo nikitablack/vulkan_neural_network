@@ -1,5 +1,6 @@
 #pragma once
 
+#include <impl/Float.hpp>
 #include <vector>
 
 namespace impl {
@@ -8,12 +9,12 @@ class Neuron {
 public:
     Neuron() = default;
 
-    Neuron(double valueArg, double biasArg, size_t inputCountArg) noexcept;
+    Neuron(Float valueArg, Float biasArg, size_t inputCountArg) noexcept;
 
 public:
-    double value{0.0};
-    double bias{0.0};
-    std::vector<double> weights{};
+    Float value{0.0};
+    Float bias{0.0};
+    std::vector<Float> weights{};
 };
 
 }  // namespace impl

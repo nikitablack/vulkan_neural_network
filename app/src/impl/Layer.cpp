@@ -11,21 +11,21 @@ Layer::Layer(size_t neuronCount, size_t inputCountArg) noexcept : inputCount{inp
     } else {
         std::random_device rd{};
         std::mt19937 gen{rd()};
-        std::uniform_real_distribution<double> dist{-1.0, 1.0};
+        std::uniform_real_distribution<Float> dist{-1.0, 1.0};
 
         for (size_t i{0}; i < neuronCount; ++i) {
-            double const value{dist(gen)};
-            double const bias{dist(gen)};
+            Float const value{dist(gen)};
+            Float const bias{dist(gen)};
             neurons.emplace_back(value, bias, inputCountArg);
         }
     }
 }
 
 [[nodiscard]] auto Layer::activate(Layer const& prevLayer,  //
-                                   std::function<auto(double)->double> const& activationFunction  //
+                                   std::function<auto(Float)->Float> const& activationFunction  //
                                    ) noexcept -> bool {
     for (auto& currNeuron : neurons) {
-        double sum{currNeuron.bias};
+        Float sum{currNeuron.bias};
 
         for (size_t j{0}; j < prevLayer.neurons.size(); ++j) {
             if (prevLayer.neurons.size() < currNeuron.weights.size()) {
@@ -44,8 +44,8 @@ Layer::Layer(size_t neuronCount, size_t inputCountArg) noexcept : inputCount{inp
 }
 
 [[nodiscard]] auto Layer::update(Layer const& prevLayer,  //
-                                 double learningRate,  //
-                                 std::vector<double> const& delta  //
+                                 Float learningRate,  //
+                                 std::vector<Float> const& delta  //
                                  ) noexcept -> bool {
     if (delta.size() != neurons.size()) {
         return false;  // Mismatch in delta size

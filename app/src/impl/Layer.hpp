@@ -14,12 +14,12 @@ public:
 
 public:
     [[nodiscard]] auto activate(Layer const& prevLayer,  //
-                                std::function<auto(double)->double> const& activationFunction  //
+                                std::function<auto(Float)->Float> const& activationFunction  //
                                 ) noexcept -> bool;
 
     [[nodiscard]] auto update(Layer const& prevLayer,  //
-                              double learningRate,  //
-                              std::vector<double> const& delta  //
+                              Float learningRate,  //
+                              std::vector<Float> const& delta  //
                               ) noexcept -> bool;
 
 public:
