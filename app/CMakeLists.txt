@@ -45,3 +45,8 @@ target_link_libraries(app
         common::warnings_as_errors
         fmt::fmt
 )
+
+# target_compile_definitions(app
+#     PRIVATE
+#         -DUSE_DOUBLE
+# )
