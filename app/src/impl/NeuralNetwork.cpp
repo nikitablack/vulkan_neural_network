@@ -1,7 +1,7 @@
 #include <fmt/core.h>
 
 #include <impl/NeuralNetwork.hpp>
-#include <impl/ScopedTimer.hpp>
+#include <impl/Timer.hpp>
 #include <iostream>
 #include <random>
 #include <stdexcept>
@@ -77,9 +77,13 @@ auto NeuralNetwork::train(std::vector<std::vector<Float>> const& input,  // 0.0-
     std::vector<size_t> indices(input.size());  // Indices for shuffling
     std::iota(indices.begin(), indices.end(), 0);
 
-    ScopedTimer t1{fmt::format("NeuralNetwork train time: ")};
+    Timer totalTimer{};
+    Timer epochTimer{};
+
+    totalTimer.start();
+
     for (size_t epoch{0}; epoch < epochCount; ++epoch) {
-        ScopedTimer t2{fmt::format("Epoch {}: ", epoch)};
+        epochTimer.start();
 
         Float epochLoss{0.0};
 
@@ -113,8 +117,12 @@ auto NeuralNetwork::train(std::vector<std::vector<Float>> const& input,  // 0.0-
         shuffle_indices(indices);
 
         Float const averageLoss{epochLoss / input.size()};
-        fmt::println("Epoch {} average loss: {}", epoch, averageLoss);
+        fmt::println("Epoch {}:\n\taverage loss: {}\n\tepoch time: {:.2f} ms", epoch, averageLoss, epochTimer.stop());
     }
+
+    auto const totalTimeMs{totalTimer.stop()};
+    fmt::println("Training completed in {:.2f} ms", totalTimeMs);
+    fmt::println("Average epoch time: {:.2f} ms", totalTimeMs / epochCount);
 
     return true;
 }
