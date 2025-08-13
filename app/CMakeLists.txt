@@ -45,3 +45,7 @@ target_link_libraries(app
         fmt::fmt
 )
 
+# target_compile_definitions(app
+#     PRIVATE
+#         -DUSE_DOUBLE
+# )
