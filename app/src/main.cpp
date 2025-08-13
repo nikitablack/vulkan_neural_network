@@ -43,7 +43,7 @@ namespace {
 }  // namespace
 
 auto main(int /* argc */, char* /* argv */[]) -> int {
-    run_test_network();
+    // run_test_network();
 
     auto const labels{impl::load_labels("train-labels.idx1-ubyte")};
     auto const images{impl::load_images("train-images.idx3-ubyte")};
@@ -62,7 +62,7 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
 
     impl::NeuralNetwork nn{std::vector<size_t>{784, 8, 10}};
     size_t constexpr EPOCH_COUNT{10};
-    double constexpr LEARNING_RATE{0.1};
+    double constexpr LEARNING_RATE{1.0};
 
     if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
         fmt::println("Failed to train neural network.");

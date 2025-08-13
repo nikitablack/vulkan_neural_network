@@ -91,28 +91,6 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
                 return false;
             }
 
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            {
-                std::cout << "Before " << epoch << "\n";
-
-                for (size_t k{1}; k < layers.size(); ++k) {
-                    auto& layer{layers[k]};
-                    std::cout << "Layer " << k << "\n";
-                    size_t neuronIndex{0};
-                    for (const auto& neuron : layer.neurons) {
-                        std::cout << neuronIndex++ << " Weights: ";
-                        for (const auto& weight : neuron.weights) {
-                            std::cout << weight << " ";
-                        }
-                        std::cout << "\n";
-                        std::cout << "  Bias: " << neuron.bias << "\n";
-                        std::cout << "  Value: " << neuron.value << "\n";
-                    }
-                    std::cout << "\n";
-                }
-            }
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
             auto const& outputLayer{layers.back()};
 
             std::vector<double> expectedOutput(outputLayer.neurons.size(), 0.0);
@@ -130,28 +108,6 @@ auto NeuralNetwork::train(std::vector<std::vector<double>> const& input,  // 0.0
             if (!backward(output, expectedOutput, learningRate)) {
                 return false;  // Backward pass failed
             }
-
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            {
-                std::cout << "After " << epoch << "\n";
-
-                for (size_t k{1}; k < layers.size(); ++k) {
-                    auto& layer{layers[k]};
-                    std::cout << "Layer " << k << "\n";
-                    size_t neuronIndex{0};
-                    for (const auto& neuron : layer.neurons) {
-                        std::cout << neuronIndex++ << " Weights: ";
-                        for (const auto& weight : neuron.weights) {
-                            std::cout << weight << " ";
-                        }
-                        std::cout << "\n";
-                        std::cout << "  Bias: " << neuron.bias << "\n";
-                        std::cout << "  Value: " << neuron.value << "\n";
-                    }
-                    std::cout << "\n";
-                }
-            }
-            // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         }
 
         shuffle_indices(indices);
@@ -239,6 +195,24 @@ auto NeuralNetwork::sigmoid(double v) noexcept -> double {
 
 auto NeuralNetwork::sigmoidDerivative(double sigmoidResult) noexcept -> double {
     return sigmoidResult * (1.0 - sigmoidResult);
+}
+
+auto NeuralNetwork::print() const noexcept -> void {
+    for (size_t k{1}; k < layers.size(); ++k) {
+        auto& layer{layers[k]};
+        std::cout << "Layer " << k << "\n";
+        size_t neuronIndex{0};
+        for (const auto& neuron : layer.neurons) {
+            std::cout << neuronIndex++ << " Weights: ";
+            for (const auto& weight : neuron.weights) {
+                std::cout << weight << " ";
+            }
+            std::cout << "\n";
+            std::cout << "  Bias: " << neuron.bias << "\n";
+            std::cout << "  Value: " << neuron.value << "\n";
+        }
+        std::cout << "\n";
+    }
 }
 
 }  // namespace impl
