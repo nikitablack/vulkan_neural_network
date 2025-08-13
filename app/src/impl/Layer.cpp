@@ -60,8 +60,9 @@ Layer::Layer(size_t neuronCount, size_t inputCountArg) noexcept : inputCount{inp
 
         for (size_t j{0}; j < currNeuron.weights.size(); ++j) {
             currNeuron.weights[j] -= learningRate * delta[i] * prevLayer.neurons[j].value;
-            currNeuron.bias -= learningRate * delta[i];
         }
+
+        currNeuron.bias -= learningRate * delta[i];
     }
 
     return true;
