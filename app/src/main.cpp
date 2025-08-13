@@ -60,8 +60,6 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
         return EXIT_FAILURE;
     }
 
-    fmt::println("Dataset size: {}.", labels.size());
-
     impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
     size_t constexpr EPOCH_COUNT{20};
     impl::Float constexpr LEARNING_RATE{1.0};
