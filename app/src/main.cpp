@@ -60,8 +60,8 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
 
     fmt::println("Dataset size: {}.", labels.size());
 
-    impl::NeuralNetwork nn{std::vector<size_t>{784, 8, 10}};
-    size_t constexpr EPOCH_COUNT{10};
+    impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
+    size_t constexpr EPOCH_COUNT{20};
     double constexpr LEARNING_RATE{1.0};
 
     if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
