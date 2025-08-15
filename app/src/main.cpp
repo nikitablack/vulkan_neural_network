@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <impl/NeuralNetwork.hpp>
+#include <impl/Timer.hpp>
 #include <impl/load_images.hpp>
 #include <impl/load_labels.hpp>
 
@@ -60,45 +61,55 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
         return EXIT_FAILURE;
     }
 
-    impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
-    size_t constexpr EPOCH_COUNT{20};
-    impl::Float constexpr LEARNING_RATE{1.0};
+    constexpr size_t TRAIN_COUNT{1};
+    impl::Timer trainTimer{};
+    double totalTrainTimeMs{0.0};
 
-    if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
-        fmt::println("Failed to train neural network.");
-        return EXIT_FAILURE;
-    }
+    for (size_t t{0}; t < TRAIN_COUNT; ++t) {
+        impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
+        size_t constexpr EPOCH_COUNT{20};
+        impl::Float constexpr LEARNING_RATE{1.0};
 
-    // test
-    {
-        std::vector<impl::Float> output{};
-
-        auto const testLabels{impl::load_labels("t10k-labels.idx1-ubyte")};
-        auto const testImages{impl::load_images("t10k-images.idx3-ubyte")};
-
-        if (testLabels.size() != testImages.size()) {
-            fmt::println("Mismatch between number of test labels and images.");
+        trainTimer.start();
+        if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
+            fmt::println("Failed to train neural network.");
             return EXIT_FAILURE;
         }
+        totalTrainTimeMs += trainTimer.stop();
 
-        size_t correctCount{0};
-        for (size_t i{0}; i < testLabels.size(); ++i) {
-            if (!nn.forward(testImages[i], output)) {
-                fmt::println("Failed to compute forward pass for test image {}.", i);
+        // test
+        {
+            std::vector<impl::Float> output{};
+
+            auto const testLabels{impl::load_labels("t10k-labels.idx1-ubyte")};
+            auto const testImages{impl::load_images("t10k-images.idx3-ubyte")};
+
+            if (testLabels.size() != testImages.size()) {
+                fmt::println("Mismatch between number of test labels and images.");
                 return EXIT_FAILURE;
             }
 
-            auto const maxIt{std::max_element(output.begin(), output.end())};
-            auto predictedLabel{static_cast<uint8_t>(std::distance(output.begin(), maxIt))};
+            size_t correctCount{0};
+            for (size_t i{0}; i < testLabels.size(); ++i) {
+                if (!nn.forward(testImages[i], output)) {
+                    fmt::println("Failed to compute forward pass for test image {}.", i);
+                    return EXIT_FAILURE;
+                }
 
-            if (predictedLabel == testLabels[i]) {
-                ++correctCount;
+                auto const maxIt{std::max_element(output.begin(), output.end())};
+                auto predictedLabel{static_cast<uint8_t>(std::distance(output.begin(), maxIt))};
+
+                if (predictedLabel == testLabels[i]) {
+                    ++correctCount;
+                }
             }
-        }
 
-        double const accuracy{static_cast<double>(correctCount) / testLabels.size()};
-        fmt::println("Test accuracy: {:.2} ({}/{})", accuracy, correctCount, testLabels.size());
+            double const accuracy{static_cast<double>(correctCount) / testLabels.size()};
+            fmt::println("Test accuracy: {:.2} ({}/{})", accuracy, correctCount, testLabels.size());
+        }
     }
+
+    fmt::println("Average training time: {:.2f} ms", totalTrainTimeMs / TRAIN_COUNT);
 
     return EXIT_SUCCESS;
 }

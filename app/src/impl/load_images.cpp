@@ -1,3 +1,5 @@
+#include <fmt/core.h>
+
 #include <cmrc/cmrc.hpp>
 #include <cstring>
 #include <impl/load_images.hpp>

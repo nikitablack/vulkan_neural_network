@@ -73,6 +73,7 @@ auto NeuralNetwork::train(std::vector<std::vector<Float>> const& input,  // 0.0-
     }
 
     std::vector<Float> output{};  // buffer for multiple forward passes
+    std::vector<Float> expectedOutput{};  // buffer for expected output
 
     std::vector<size_t> indices(input.size());  // Indices for shuffling
     std::iota(indices.begin(), indices.end(), 0);
@@ -85,7 +86,7 @@ auto NeuralNetwork::train(std::vector<std::vector<Float>> const& input,  // 0.0-
     for (size_t epoch{0}; epoch < epochCount; ++epoch) {
         epochTimer.start();
 
-        Float epochLoss{0.0};
+        Float epochLoss{0.0_F};
 
         for (size_t i{0}; i < indices.size(); ++i) {
             auto const idx{indices[i]};
@@ -97,17 +98,24 @@ auto NeuralNetwork::train(std::vector<std::vector<Float>> const& input,  // 0.0-
 
             auto const& outputLayer{layers.back()};
 
-            std::vector<Float> expectedOutput(outputLayer.neurons.size(), 0.0);
-            expectedOutput[target[idx]] = 1.0;
+            expectedOutput.resize(outputLayer.neurons.size());
+            expectedOutput.assign(expectedOutput.size(), 0.0_F);
 
-            Float loss{0.0};
+            if (target[idx] >= expectedOutput.size()) {
+                fmt::println("Target index {} out of bounds for output size {}.", target[idx], expectedOutput.size());
+                return false;
+            }
+
+            expectedOutput[target[idx]] = 1.0_F;
+
+            Float mse{0.0_F};
             for (size_t j{0}; j < output.size(); ++j) {
                 Float const diff{expectedOutput[j] - output[j]};
-                loss += diff * diff;
+                mse += diff * diff;
             }
-            loss /= output.size();  // Mean squared error
+            mse /= output.size();  // Mean squared error
 
-            epochLoss += loss;
+            epochLoss += mse;
 
             if (!backward(output, expectedOutput, learningRate)) {
                 return false;  // Backward pass failed
@@ -145,7 +153,7 @@ auto NeuralNetwork::backward(std::vector<Float> const& output,  //
     std::vector<Float> deltaOutput(output.size());
     for (size_t i{0}; i < output.size(); ++i) {
         Float const a{output[i]};
-        Float const dCdA{static_cast<Float>(2) * (a - expectedOutput[i]) / output.size()};
+        Float const dCdA{2.0_F * (a - expectedOutput[i]) / output.size()};
         Float const dAdZ{sigmoidDerivative(a)};
         deltaOutput[i] = dCdA * dAdZ;
     }
@@ -168,7 +176,7 @@ auto NeuralNetwork::backward(std::vector<Float> const& output,  //
             auto& currLayer{layers[lay]};
             auto const& leftLayer{layers[lay - 1]};
 
-            std::vector<Float> deltaHidden(rightLayer->inputCount);
+            std::vector<Float> deltaHidden(currLayer.neurons.size());
 
             // delta.size == rightLayer.neurons.size
             // currLayer.neurons.size == rightLayer.neurons[X].weights.size
@@ -198,11 +206,11 @@ auto NeuralNetwork::backward(std::vector<Float> const& output,  //
 }
 
 auto NeuralNetwork::sigmoid(Float v) noexcept -> Float {
-    return static_cast<Float>(1) / (static_cast<Float>(1) + std::exp(-v));
+    return 1.0_F / (1.0_F + std::exp(-v));
 }
 
 auto NeuralNetwork::sigmoidDerivative(Float sigmoidResult) noexcept -> Float {
-    return sigmoidResult * (static_cast<Float>(1) - sigmoidResult);
+    return sigmoidResult * (1.0_F - sigmoidResult);
 }
 
 auto NeuralNetwork::print() const noexcept -> void {

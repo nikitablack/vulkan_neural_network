@@ -8,8 +8,7 @@ namespace impl {
 class Neuron {
 public:
     Neuron() = default;
-
-    Neuron(Float valueArg, Float biasArg, size_t inputCountArg) noexcept;
+    Neuron(size_t inputCount) noexcept;
 
 public:
     Float value{0.0};

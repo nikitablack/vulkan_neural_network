@@ -1,22 +1,15 @@
 #include <impl/Layer.hpp>
-#include <random>
 
 namespace impl {
 
-Layer::Layer(size_t neuronCount, size_t inputCountArg) noexcept : inputCount{inputCountArg} {
+Layer::Layer(size_t neuronCount, size_t inputCount) noexcept {
     neurons.reserve(neuronCount);
 
-    if (inputCountArg == 0) {
+    if (inputCount == 0) {
         neurons.resize(neuronCount);
     } else {
-        std::random_device rd{};
-        std::mt19937 gen{rd()};
-        std::uniform_real_distribution<Float> dist{-1.0, 1.0};
-
         for (size_t i{0}; i < neuronCount; ++i) {
-            Float const value{dist(gen)};
-            Float const bias{dist(gen)};
-            neurons.emplace_back(value, bias, inputCountArg);
+            neurons.emplace_back(inputCount);
         }
     }
 }
@@ -25,7 +18,7 @@ Layer::Layer(size_t neuronCount, size_t inputCountArg) noexcept : inputCount{inp
                                    std::function<auto(Float)->Float> const& activationFunction  //
                                    ) noexcept -> bool {
     for (auto& currNeuron : neurons) {
-        Float sum{currNeuron.bias};
+        Float z{currNeuron.bias};
 
         for (size_t j{0}; j < prevLayer.neurons.size(); ++j) {
             if (prevLayer.neurons.size() < currNeuron.weights.size()) {
@@ -34,10 +27,10 @@ Layer::Layer(size_t neuronCount, size_t inputCountArg) noexcept : inputCount{inp
 
             auto const& prevNeuron{prevLayer.neurons[j]};
 
-            sum += currNeuron.weights[j] * prevNeuron.value;
+            z += currNeuron.weights[j] * prevNeuron.value;
         }
 
-        currNeuron.value = activationFunction(sum);
+        currNeuron.value = activationFunction(z);
     }
 
     return true;

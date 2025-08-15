@@ -26,12 +26,12 @@ private:
 
     auto print() const noexcept -> void;
 
-public:
+private:
     static auto sigmoid(Float v) noexcept -> Float;
-    static auto sigmoidDerivative(Float v) noexcept -> Float;
+    static auto sigmoidDerivative(Float sigmoidResult) noexcept -> Float;
 
 public:
-    std::vector<Layer> layers;
+    std::vector<Layer> layers{};
 };
 
 }  // namespace impl

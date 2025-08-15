@@ -8,8 +8,6 @@ namespace impl {
 
 class Layer {
 public:
-    Layer() = default;
-
     Layer(size_t neuronCount, size_t inputCountArg) noexcept;
 
 public:
@@ -24,7 +22,6 @@ public:
 
 public:
     std::vector<Neuron> neurons{};
-    size_t inputCount{0};
 };
 
 }  // namespace impl
