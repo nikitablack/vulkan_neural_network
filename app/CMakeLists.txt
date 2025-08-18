@@ -46,7 +46,20 @@ target_link_libraries(app
         fmt::fmt
 )
 
-# target_compile_definitions(app
+option(USE_DOUBLE "Use double precision" OFF)
+
+if(USE_DOUBLE)
+    target_compile_definitions(app
+        PRIVATE
+            -DUSE_DOUBLE
+    )
+endif()
+
+# target_compile_options(app
 #     PRIVATE
-#         -DUSE_DOUBLE
+#         -save-temps=obj
+#         -fverbose-asm
+#         -masm=intel
+#         -mavx2
+#         -mfma
 # )
