@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 
-project(app LANGUAGES CXX)
+project(naive LANGUAGES CXX)
 
-add_executable(app)
+add_executable(naive)
 
-target_sources(app
+target_sources(naive
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Float.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Layer.cpp
@@ -27,19 +27,19 @@ target_sources(app
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
 )
 
-target_include_directories(app
+target_include_directories(naive
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-set_target_properties(app
+set_target_properties(naive
     PROPERTIES
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS NO
 )
 
-target_link_libraries(app
+target_link_libraries(naive
     PRIVATE
         cmrc_dataset
         common::warnings_as_errors
@@ -49,13 +49,13 @@ target_link_libraries(app
 option(USE_DOUBLE "Use double precision" OFF)
 
 if(USE_DOUBLE)
-    target_compile_definitions(app
+    target_compile_definitions(naive
         PRIVATE
             -DUSE_DOUBLE
     )
 endif()
 
-# target_compile_options(app
+# target_compile_options(naive
 #     PRIVATE
 #         -save-temps=obj
 #         -fverbose-asm

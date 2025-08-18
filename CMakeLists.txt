@@ -17,7 +17,7 @@ add_subdirectory(third_party/fmt SYSTEM)
 
 add_subdirectory(libs/warnings)
 
-add_subdirectory(app)
+add_subdirectory(app/naive)
 
 cmrc_add_resource_library(cmrc_dataset "")
 
