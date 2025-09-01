@@ -46,8 +46,7 @@ target_link_libraries(naive
         fmt::fmt
 )
 
-option(USE_DOUBLE "Use double precision" OFF)
-
+# the option defined in the root CMakeLists.txt
 if(USE_DOUBLE)
     target_compile_definitions(naive
         PRIVATE
@@ -60,6 +59,4 @@ endif()
 #         -save-temps=obj
 #         -fverbose-asm
 #         -masm=intel
-#         -mavx2
-#         -mfma
 # )

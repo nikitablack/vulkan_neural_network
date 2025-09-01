@@ -5,6 +5,8 @@ project(vknn LANGUAGES CXX)
 include(FetchContent)
 
 option(BUILD_TESTS "Whether or not to build the tests" OFF)
+option(USE_DOUBLE "Use double precision" OFF)
+option(BUILD_NAIVE "Build naive implementation" ON)
 
 if(BUILD_TESTS)
     enable_testing()
@@ -17,7 +19,9 @@ add_subdirectory(third_party/fmt SYSTEM)
 
 add_subdirectory(libs/warnings)
 
-add_subdirectory(app/naive)
+if(BUILD_NAIVE)
+    add_subdirectory(app/naive)
+endif()
 
 cmrc_add_resource_library(cmrc_dataset "")
 
