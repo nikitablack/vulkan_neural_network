@@ -53,6 +53,18 @@ namespace {
 auto main(int /* argc */, char* /* argv */[]) -> int {
     // run_test_network();
 
+#if defined(EIGEN_VECTORIZE_AVX512)
+    fmt::println("Using AVX-512");
+#elif defined(EIGEN_VECTORIZE_AVX2)
+    fmt::println("Using AVX2");
+#elif defined(EIGEN_VECTORIZE_AVX)
+    fmt::println("Using AVX\n");
+#elif defined(EIGEN_VECTORIZE_SSE)
+    fmt::println("Using SSE");
+#else
+    fmt::println("No vectorization");
+#endif
+
     auto const labels{common::load_labels("train-labels.idx1-ubyte")};
     auto const images{common::load_images("train-images.idx3-ubyte")};
 

@@ -33,3 +33,8 @@ target_link_libraries(eigen_nn
         libs::common
         libs::warnings_as_errors
 )
+
+# target_compile_options(eigen_nn
+#     PRIVATE
+#         -mavx2
+# )
