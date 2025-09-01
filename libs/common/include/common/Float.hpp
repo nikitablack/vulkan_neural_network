@@ -1,6 +1,6 @@
 #pragma once
 
-namespace impl {
+namespace common {
 
 #ifdef USE_DOUBLE
 using Float = double;
@@ -12,4 +12,4 @@ constexpr Float operator"" _F(long double v) {
     return static_cast<Float>(v);
 }
 
-}  // namespace impl
+}  // namespace common

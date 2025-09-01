@@ -1,13 +1,11 @@
-#include <fmt/core.h>
-
 #include <cmrc/cmrc.hpp>
+#include <common/load_images.hpp>
+#include <common/swap_endian.hpp>
 #include <cstring>
-#include <impl/load_images.hpp>
-#include <impl/swap_endian.hpp>
 
 CMRC_DECLARE(cmrc_dataset);
 
-namespace impl {
+namespace common {
 
 auto load_images(std::string const& name) noexcept -> std::vector<std::vector<Float>> {
     auto const fs{cmrc::cmrc_dataset::get_filesystem()};
@@ -43,4 +41,4 @@ auto load_images(std::string const& name) noexcept -> std::vector<std::vector<Fl
     return images;
 }
 
-}  // namespace impl
+}  // namespace common

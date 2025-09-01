@@ -1,0 +1,110 @@
+#include <fmt/core.h>
+
+#include <common/load_images.hpp>
+#include <common/load_labels.hpp>
+#include <cstdlib>
+#include <impl/NeuralNetwork.hpp>
+
+namespace {
+
+[[maybe_unused]] auto run_test_network() -> impl::NeuralNetwork {
+    using namespace common;
+
+    auto nn{impl::NeuralNetwork{std::vector<size_t>{2, 2, 2, 2}}};
+
+    auto& layer0{nn.layers[0]};
+    layer0.values(0, 0) = 1.0_F;
+    layer0.values(1, 0) = 2.0_F;
+
+    auto& layer1{nn.layers[1]};
+    layer1.weights(0, 0) = 0.1_F;
+    layer1.weights(0, 1) = 0.1_F;
+    layer1.weights(1, 0) = 0.2_F;
+    layer1.weights(1, 1) = 0.2_F;
+    layer1.biases(0, 0) = 0.1_F;
+    layer1.biases(1, 0) = 0.2_F;
+
+    auto& layer2{nn.layers[2]};
+    layer2.weights(0, 0) = 0.3_F;
+    layer2.weights(0, 1) = 0.3_F;
+    layer2.weights(1, 0) = 0.4_F;
+    layer2.weights(1, 1) = 0.4_F;
+    layer2.biases(0, 0) = 0.3_F;
+    layer2.biases(1, 0) = 0.4_F;
+
+    auto& layer3{nn.layers[3]};
+    layer3.weights(0, 0) = 0.5_F;
+    layer3.weights(0, 1) = 0.5_F;
+    layer3.weights(1, 0) = 0.6_F;
+    layer3.weights(1, 1) = 0.6_F;
+    layer3.biases(0, 0) = 0.5_F;
+    layer3.biases(1, 0) = 0.6_F;
+
+    std::vector<std::vector<Float>> input{{1.0_F, 2.0_F}};
+    std::vector<Float> output{};
+
+    [[maybe_unused]] auto result{nn.train(input, {1}, 2, 0.1_F)};
+
+    return nn;
+}
+
+}  // namespace
+
+auto main(int /* argc */, char* /* argv */[]) -> int {
+    // run_test_network();
+
+    auto const labels{common::load_labels("train-labels.idx1-ubyte")};
+    auto const images{common::load_images("train-images.idx3-ubyte")};
+
+    if (labels.empty() || images.empty()) {
+        fmt::println("Failed to load dataset labels or images.");
+        return EXIT_FAILURE;
+    }
+
+    if (labels.size() != images.size()) {
+        fmt::println("Mismatch between number of labels and images.");
+        return EXIT_FAILURE;
+    }
+
+    impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
+    size_t constexpr EPOCH_COUNT{20};
+    common::Float constexpr LEARNING_RATE{1.0};
+
+    if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
+        fmt::println("Failed to train neural network.");
+        return EXIT_FAILURE;
+    }
+
+    // test
+    {
+        std::vector<common::Float> output{};
+
+        auto const testLabels{common::load_labels("t10k-labels.idx1-ubyte")};
+        auto const testImages{common::load_images("t10k-images.idx3-ubyte")};
+
+        if (testLabels.size() != testImages.size()) {
+            fmt::println("Mismatch between number of test labels and images.");
+            return EXIT_FAILURE;
+        }
+
+        size_t correctCount{0};
+        for (size_t i{0}; i < testLabels.size(); ++i) {
+            if (!nn.forward(testImages[i], output)) {
+                fmt::println("Failed to compute forward pass for test image {}.", i);
+                return EXIT_FAILURE;
+            }
+
+            auto const maxIt{std::max_element(output.begin(), output.end())};
+            auto predictedLabel{static_cast<uint8_t>(std::distance(output.begin(), maxIt))};
+
+            if (predictedLabel == testLabels[i]) {
+                ++correctCount;
+            }
+        }
+
+        double const accuracy{static_cast<double>(correctCount) / testLabels.size()};
+        fmt::println("Test accuracy: {:.2} ({}/{})", accuracy, correctCount, testLabels.size());
+    }
+
+    return EXIT_SUCCESS;
+}

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <impl/Float.hpp>
+#include <common/Float.hpp>
 #include <string>
 #include <vector>
 
-namespace impl {
+namespace common {
 
 auto load_images(std::string const& name) noexcept -> std::vector<std::vector<Float>>;
 
-}  // namespace impl
+}  // namespace common

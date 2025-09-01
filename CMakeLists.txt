@@ -5,8 +5,8 @@ project(vknn LANGUAGES CXX)
 include(FetchContent)
 
 option(BUILD_TESTS "Whether or not to build the tests" OFF)
-option(USE_DOUBLE "Use double precision" OFF)
 option(BUILD_NAIVE "Build naive implementation" ON)
+option(BUILD_EIGEN "Build Eigen implementation" ON)
 
 if(BUILD_TESTS)
     enable_testing()
@@ -14,13 +14,19 @@ if(BUILD_TESTS)
 endif()
 
 add_subdirectory(third_party/cmakerc SYSTEM)
-add_subdirectory(third_party/eigen SYSTEM)
 add_subdirectory(third_party/fmt SYSTEM)
 
+add_subdirectory(libs/common)
 add_subdirectory(libs/warnings)
 
 if(BUILD_NAIVE)
     add_subdirectory(app/naive)
+endif()
+
+if(BUILD_EIGEN)
+    add_subdirectory(third_party/eigen SYSTEM)
+
+    add_subdirectory(app/eigen)
 endif()
 
 cmrc_add_resource_library(cmrc_dataset "")

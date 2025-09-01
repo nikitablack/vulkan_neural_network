@@ -15,10 +15,10 @@ Layer::Layer(size_t neuronCount, size_t inputCount) noexcept {
 }
 
 [[nodiscard]] auto Layer::activate(Layer const& prevLayer,  //
-                                   std::function<auto(Float)->Float> const& activationFunction  //
+                                   std::function<auto(common::Float)->common::Float> const& activationFunction  //
                                    ) noexcept -> bool {
     for (auto& currNeuron : neurons) {
-        Float z{currNeuron.bias};
+        common::Float z{currNeuron.bias};
 
         for (size_t j{0}; j < prevLayer.neurons.size(); ++j) {
             if (prevLayer.neurons.size() < currNeuron.weights.size()) {
@@ -37,8 +37,8 @@ Layer::Layer(size_t neuronCount, size_t inputCount) noexcept {
 }
 
 [[nodiscard]] auto Layer::update(Layer const& prevLayer,  //
-                                 Float learningRate,  //
-                                 std::vector<Float> const& delta  //
+                                 common::Float learningRate,  //
+                                 std::vector<common::Float> const& delta  //
                                  ) noexcept -> bool {
     if (delta.size() != neurons.size()) {
         return false;  // Mismatch in delta size

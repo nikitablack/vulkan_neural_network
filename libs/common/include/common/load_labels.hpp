@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-namespace impl {
+namespace common {
 
 auto load_labels(std::string const& name) noexcept -> std::vector<uint8_t>;
 
-}  // namespace impl
+}  // namespace common

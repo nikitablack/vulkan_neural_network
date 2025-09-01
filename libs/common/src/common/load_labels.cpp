@@ -1,11 +1,11 @@
 #include <cmrc/cmrc.hpp>
+#include <common/load_labels.hpp>
+#include <common/swap_endian.hpp>
 #include <cstring>
-#include <impl/load_labels.hpp>
-#include <impl/swap_endian.hpp>
 
 CMRC_DECLARE(cmrc_dataset);
 
-namespace impl {
+namespace common {
 
 auto load_labels(std::string const& name) noexcept -> std::vector<uint8_t> {
     auto const fs{cmrc::cmrc_dataset::get_filesystem()};
@@ -26,4 +26,4 @@ auto load_labels(std::string const& name) noexcept -> std::vector<uint8_t> {
     return labels;
 }
 
-}  // namespace impl
+}  // namespace common

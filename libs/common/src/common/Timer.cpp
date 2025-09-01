@@ -1,6 +1,6 @@
-#include <impl/Timer.hpp>
+#include <common/Timer.hpp>
 
-namespace impl {
+namespace common {
 
 Timer::Timer() noexcept : m_startTime{std::chrono::high_resolution_clock::now()} {}
 
@@ -16,4 +16,4 @@ auto Timer::stop() noexcept -> double {
     return durationMs;
 }
 
-}  // namespace impl
+}  // namespace common

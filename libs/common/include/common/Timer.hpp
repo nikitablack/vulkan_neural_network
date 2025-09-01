@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-namespace impl {
+namespace common {
 
 class Timer {
 public:
@@ -16,4 +16,4 @@ private:
     decltype(std::chrono::high_resolution_clock::now()) m_startTime;
 };
 
-}  // namespace impl
+}  // namespace common

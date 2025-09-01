@@ -1,14 +1,21 @@
 #pragma once
 
+#include <Eigen/Dense>
+#include <common/Float.hpp>
 #include <functional>
-#include <impl/Neuron.hpp>
 #include <vector>
 
 namespace impl {
 
 class Layer {
 public:
-    Layer(size_t neuronCount, size_t inputCountArg) noexcept;
+    using MatrixX = Eigen::Matrix<common::Float, Eigen::Dynamic, Eigen::Dynamic>;
+    using VectorX = Eigen::Matrix<common::Float, Eigen::Dynamic, 1>;
+
+public:
+    Layer() noexcept = default;
+
+    Layer(size_t neuronCount, size_t inputCount) noexcept;
 
 public:
     [[nodiscard]] auto activate(Layer const& prevLayer,  //
@@ -17,11 +24,15 @@ public:
 
     [[nodiscard]] auto update(Layer const& prevLayer,  //
                               common::Float learningRate,  //
-                              std::vector<common::Float> const& delta  //
+                              MatrixX const& delta  //
                               ) noexcept -> bool;
 
+    size_t size() const noexcept;
+
 public:
-    std::vector<Neuron> neurons{};
+    MatrixX weights{};
+    MatrixX biases{};
+    MatrixX values{};
 };
 
 }  // namespace impl

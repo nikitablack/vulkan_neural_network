@@ -1,6 +1,6 @@
 #pragma once
 
-#include <impl/Float.hpp>
+#include <common/Float.hpp>
 #include <vector>
 
 namespace impl {
@@ -11,9 +11,9 @@ public:
     Neuron(size_t inputCount) noexcept;
 
 public:
-    Float value{0.0};
-    Float bias{0.0};
-    std::vector<Float> weights{};
+    common::Float value{0.0};
+    common::Float bias{0.0};
+    std::vector<common::Float> weights{};
 };
 
 }  // namespace impl

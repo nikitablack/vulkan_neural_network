@@ -1,15 +1,15 @@
 #include <fmt/core.h>
 
+#include <common/Timer.hpp>
+#include <common/load_images.hpp>
+#include <common/load_labels.hpp>
 #include <cstdlib>
 #include <impl/NeuralNetwork.hpp>
-#include <impl/Timer.hpp>
-#include <impl/load_images.hpp>
-#include <impl/load_labels.hpp>
 
 namespace {
 
 [[maybe_unused]] auto run_test_network() -> impl::NeuralNetwork {
-    using namespace impl;
+    using namespace common;
 
     auto nn{impl::NeuralNetwork{std::vector<size_t>{2, 2, 2, 2}}};
 
@@ -48,8 +48,8 @@ namespace {
 auto main(int /* argc */, char* /* argv */[]) -> int {
     // run_test_network();
 
-    auto const labels{impl::load_labels("train-labels.idx1-ubyte")};
-    auto const images{impl::load_images("train-images.idx3-ubyte")};
+    auto const labels{common::load_labels("train-labels.idx1-ubyte")};
+    auto const images{common::load_images("train-images.idx3-ubyte")};
 
     if (labels.empty() || images.empty()) {
         fmt::println("Failed to load dataset labels or images.");
@@ -62,13 +62,13 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
     }
 
     constexpr size_t TRAIN_COUNT{1};
-    impl::Timer trainTimer{};
+    common::Timer trainTimer{};
     double totalTrainTimeMs{0.0};
 
     for (size_t t{0}; t < TRAIN_COUNT; ++t) {
         impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
         size_t constexpr EPOCH_COUNT{20};
-        impl::Float constexpr LEARNING_RATE{1.0};
+        common::Float constexpr LEARNING_RATE{1.0};
 
         trainTimer.start();
         if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
@@ -79,10 +79,10 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
 
         // test
         {
-            std::vector<impl::Float> output{};
+            std::vector<common::Float> output{};
 
-            auto const testLabels{impl::load_labels("t10k-labels.idx1-ubyte")};
-            auto const testImages{impl::load_images("t10k-images.idx3-ubyte")};
+            auto const testLabels{common::load_labels("t10k-labels.idx1-ubyte")};
+            auto const testImages{common::load_images("t10k-images.idx3-ubyte")};
 
             if (testLabels.size() != testImages.size()) {
                 fmt::println("Mismatch between number of test labels and images.");

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <chrono>
-#include <impl/Timer.hpp>
+#include <common/Timer.hpp>
 #include <string>
 
-namespace impl {
+namespace common {
 
 class ScopedTimer {
 public:
@@ -16,4 +16,4 @@ private:
     std::string m_msg;
 };
 
-}  // namespace impl
+}  // namespace common

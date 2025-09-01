@@ -85,7 +85,7 @@ endif ()
 add_library(warnings_as_errors INTERFACE)
 target_compile_options(warnings_as_errors INTERFACE ${PROJECT_WARNINGS_AS_ERRORS})
 
-add_library(common::warnings_as_errors
+add_library(libs::warnings_as_errors
     ALIAS
         warnings_as_errors
 )

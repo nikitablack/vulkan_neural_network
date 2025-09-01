@@ -1,43 +1,35 @@
 cmake_minimum_required(VERSION 3.25 FATAL_ERROR)
 
-project(naive_nn LANGUAGES CXX)
+project(eigen_nn LANGUAGES CXX)
 
-add_executable(naive_nn)
+add_executable(eigen_nn)
 
-target_sources(naive_nn
+target_sources(eigen_nn
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Layer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Layer.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/NeuralNetwork.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/NeuralNetwork.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Neuron.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/Neuron.hpp
 
         ${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp
 )
 
-target_include_directories(naive_nn
+target_include_directories(eigen_nn
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-set_target_properties(naive_nn
+set_target_properties(eigen_nn
     PROPERTIES
         CXX_STANDARD 17
         CXX_STANDARD_REQUIRED YES
         CXX_EXTENSIONS NO
 )
 
-target_link_libraries(naive_nn
+target_link_libraries(eigen_nn
     PRIVATE
+        Eigen3::Eigen
         fmt::fmt
         libs::common
         libs::warnings_as_errors
 )
-
-# target_compile_options(naive_nn
-#     PRIVATE
-#         -save-temps=obj
-#         -fverbose-asm
-#         -masm=intel
-# )
