@@ -44,9 +44,9 @@ target_link_libraries(common
         libs::warnings_as_errors
 )
 
-option(USE_DOUBLE "Use double precision" OFF)
+option(VKNN_USE_DOUBLE "Use double precision" OFF)
 
-if(USE_DOUBLE)
+if(VKNN_USE_DOUBLE)
     target_compile_definitions(common
         PUBLIC
             -DUSE_DOUBLE

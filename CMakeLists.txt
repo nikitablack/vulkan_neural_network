@@ -4,14 +4,8 @@ project(vknn LANGUAGES CXX)
 
 include(FetchContent)
 
-option(BUILD_TESTS "Whether or not to build the tests" OFF)
-option(BUILD_NAIVE "Build naive implementation" ON)
-option(BUILD_EIGEN "Build Eigen implementation" ON)
-
-if(BUILD_TESTS)
-    enable_testing()
-    add_subdirectory(third_party/catch SYSTEM)
-endif()
+option(VKNN_BUILD_NAIVE "Build naive implementation" ON)
+option(VKNN_BUILD_EIGEN "Build Eigen implementation" ON)
 
 add_subdirectory(third_party/cmakerc SYSTEM)
 add_subdirectory(third_party/fmt SYSTEM)
@@ -19,11 +13,11 @@ add_subdirectory(third_party/fmt SYSTEM)
 add_subdirectory(libs/common)
 add_subdirectory(libs/warnings)
 
-if(BUILD_NAIVE)
+if(VKNN_BUILD_NAIVE)
     add_subdirectory(app/naive)
 endif()
 
-if(BUILD_EIGEN)
+if(VKNN_BUILD_EIGEN)
     add_subdirectory(third_party/eigen SYSTEM)
 
     add_subdirectory(app/eigen)

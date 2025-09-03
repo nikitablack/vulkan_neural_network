@@ -34,7 +34,11 @@ target_link_libraries(eigen_nn
         libs::warnings_as_errors
 )
 
-# target_compile_options(eigen_nn
-#     PRIVATE
-#         -mavx2
-# )
+option(VKNN_USE_AVX2 "Use AVX2 instructions" OFF)
+
+if(VKNN_USE_AVX2)
+    target_compile_options(eigen_nn
+        PRIVATE
+            -mavx2
+    )
+endif()
