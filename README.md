@@ -1,59 +1,71 @@
 # Vulkan Neural Network (vknn)
 
 This project implements a simple feedforward neural network for the MNIST dataset, with the following variants:
-- **Naive C++ implementation** (`app/naive`)
-- **Eigen-optimized implementation** (`app/eigen`)
+- **Naive C++ implementation - strightforward implementation using standard library and some sort of OOP** (`app/naive`)
+- **Eigen-optimized implementation - linear-algebra-friendly implementation using Eigen library** (`app/eigen`)
 
-All variants load the MNIST dataset from embedded resources and train/test a neural network with one hidden layer.
+All variants load the MNIST dataset from embedded resources (embedded with `cmakerc` library) and train/test a neural network with specified number of hidden layer.
 
-## Features
+---
 
-- C++17 codebase
-- Modular structure with common utilities ([libs/common](libs/common))
-- Strict warning and error handling ([libs/warnings](libs/warnings))
-- Resource embedding using [cmakerc](third_party/cmakerc)
-- Optional Eigen-based vectorization ([third_party/eigen](third_party/eigen))
-- MNIST dataset embedded as resources ([resources](resources))
+## Requirements
+
+- **Minimum CMake:** 3.25
+- **Compilers tested:**
+    - `gcc (Ubuntu 10.5.0-1ubuntu1~20.04) 10.5.0`
+    - `clang version 10.0.0-4ubuntu1`
+- **Internet connection** (required for CMake `FetchContent`)
+
+> If you use a different version or compiler and encounter a compilation error, please let me know and I'll fix it as soon as possible.
+
+---
+
+## Building
+
+```sh
+cd vulkan_neural_network
+mkdir build
+cmake -S . -B build
+cmake --build build
+```
+
+> There may be compilation warnings from some third-party libraries. You can ignore them.
+
+## Configure options
+
+- `VKNN_BUILD_EIGEN` - build Eigen implementation - `eigen_nn`, `ON` by default
+    - `VKNN_USE_AVX2` - use `avx2` instructions set for the Eigen implementation, `OFF` by default, requires a CPU with avx2 support
+- `VKNN_BUILD_NAIVE` - build naive implementation - `naive_nn`, `ON` by default
+- `VKNN_USE_DOUBLE` - use double precision (`double`) data type instead of single precision (`float`), `OFF` by default
+
+To use an option, provide it during the configuration step, for example:
+
+```sh
+cmake -S . -B build -DVKNN_USE_DOUBLE=ON -DVKNN_BUILD_EIGEN=OFF
+```
+
+---
 
 ## Project Structure
 
-- `app/naive/` — Naive (e.g. _brute-force_) neural network implementation
+- `app/naive/` — Naive neural network implementation
 - `app/eigen/` — Eigen-based neural network implementation
 - `libs/common/` — Common utilities (e.g., data loading, timers)
 - `libs/warnings/` — Compiler warning settings
 - `resources/` — MNIST dataset files
 - `third_party/` — External dependencies (fmt, cmakerc, eigen)
 
-## Building
-
-This project uses CMake (>= 3.25):
-
-```sh
-cmake -S . -B build
-cmake --build build
-```
-
-You can enable/disable implementations via CMake options:
-
-- `BUILD_NAIVE` (default ON)
-- `BUILD_EIGEN` (default ON)
-
-Example:
-
-```sh
-cmake -S . -B build -DBUILD_NAIVE=ON -DBUILD_EIGEN=OFF
-```
-
 ## Running
 
-Executables are built in `build/app/naive/` and `build/app/eigen/`:
-
 ```sh
+# naive implementation
 ./build/app/naive/naive_nn
+
+# eigen implementation
 ./build/app/eigen/eigen_nn
 ```
 
-Both will train and test a neural network on the embedded MNIST dataset.
+All implementations will train and test a neural network on the embedded MNIST dataset.
 
 ## Dataset
 
