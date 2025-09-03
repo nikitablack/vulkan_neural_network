@@ -13,7 +13,6 @@ All variants load the MNIST dataset from embedded resources (embedded with `cmak
 - **Minimum CMake:** 3.25
 - **Compilers tested:**
     - `gcc (Ubuntu 10.5.0-1ubuntu1~20.04) 10.5.0`
-    - `clang version 10.0.0-4ubuntu1`
 - **Internet connection** (required for CMake `FetchContent`)
 
 > If you use a different version or compiler and encounter a compilation error, please let me know and I'll fix it as soon as possible.
@@ -33,8 +32,8 @@ cmake --build build
 
 ## Configure options
 
-- `VKNN_BUILD_EIGEN` - build Eigen implementation - `eigen_nn`, `ON` by default
-    - `VKNN_USE_AVX2` - use `avx2` instructions set for the Eigen implementation, `OFF` by default, requires a CPU with avx2 support
+- `VKNN_BUILD_EIGEN` - build Eigen-based implementation - `eigen_nn`, `ON` by default
+    - `VKNN_USE_AVX2` - use `avx2` instructions set for the Eigen-based implementation, `OFF` by default, requires a CPU with avx2 support
 - `VKNN_BUILD_NAIVE` - build naive implementation - `naive_nn`, `ON` by default
 - `VKNN_USE_DOUBLE` - use double precision (`double`) data type instead of single precision (`float`), `OFF` by default
 
