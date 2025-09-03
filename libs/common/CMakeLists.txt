@@ -48,7 +48,7 @@ option(USE_DOUBLE "Use double precision" OFF)
 
 if(USE_DOUBLE)
     target_compile_definitions(common
-        PRIVATE
+        PUBLIC
             -DUSE_DOUBLE
     )
 endif()
