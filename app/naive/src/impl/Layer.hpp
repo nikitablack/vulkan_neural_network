@@ -4,11 +4,18 @@
 #include <impl/Neuron.hpp>
 #include <vector>
 
+namespace common {
+
+template <typename T>
+class LCG;
+
+}
+
 namespace impl {
 
 class Layer {
 public:
-    Layer(size_t neuronCount, size_t inputCountArg) noexcept;
+    Layer(size_t neuronCount, size_t inputCountArg, common::LCG<common::Float>& lcg) noexcept;
 
 public:
     [[nodiscard]] auto activate(Layer const& prevLayer,  //

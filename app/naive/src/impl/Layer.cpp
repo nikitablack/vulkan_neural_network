@@ -1,15 +1,18 @@
+#include <fmt/core.h>
+
+#include <common/LCG.hpp>
 #include <impl/Layer.hpp>
 
 namespace impl {
 
-Layer::Layer(size_t neuronCount, size_t inputCount) noexcept {
+Layer::Layer(size_t neuronCount, size_t inputCount, common::LCG<common::Float>& lcg) noexcept {
     neurons.reserve(neuronCount);
 
     if (inputCount == 0) {
         neurons.resize(neuronCount);
     } else {
         for (size_t i{0}; i < neuronCount; ++i) {
-            neurons.emplace_back(inputCount);
+            neurons.emplace_back(inputCount, lcg);
         }
     }
 }

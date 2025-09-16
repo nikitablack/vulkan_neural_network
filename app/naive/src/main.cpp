@@ -1,5 +1,7 @@
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
+#include <common/LCG.hpp>
 #include <common/Timer.hpp>
 #include <common/load_images.hpp>
 #include <common/load_labels.hpp>
@@ -8,45 +10,37 @@
 
 namespace {
 
-[[maybe_unused]] auto run_test_network() -> impl::NeuralNetwork {
-    using namespace common;
+[[maybe_unused]] auto run_test_network() -> void {
+    common::LCG<common::Float> lcg{42};
 
-    auto nn{impl::NeuralNetwork{std::vector<size_t>{2, 2, 2, 2}}};
+    std::vector<float> input(784);
+    std::vector<float> out(10);
 
-    auto& layer0{nn.layers[0]};
-    layer0.neurons[0].value = 1.0_F;
-    layer0.neurons[1].value = 2.0_F;
+    impl::NeuralNetwork nn2{{input.size(), 100, out.size()}, lcg};
 
-    auto& layer1{nn.layers[1]};
-    layer1.neurons[0].weights = {0.1_F, 0.1_F};
-    layer1.neurons[0].bias = 0.1_F;
-    layer1.neurons[1].weights = {0.2_F, 0.2_F};
-    layer1.neurons[1].bias = 0.2_F;
+    lcg = common::LCG<common::Float>{42};
+    for (size_t i{1}; i < nn2.layers.size(); ++i) {
+        for (auto& neuron : nn2.layers[i].neurons) {
+            for (size_t w{0}; w < neuron.weights.size(); ++w) {
+                neuron.weights[w] = lcg.next();
+            }
+        }
 
-    auto& layer2{nn.layers[2]};
-    layer2.neurons[0].weights = {0.3_F, 0.3_F};
-    layer2.neurons[0].bias = 0.3_F;
-    layer2.neurons[1].weights = {0.4_F, 0.4_F};
-    layer2.neurons[1].bias = 0.4_F;
+        for (auto& neuron : nn2.layers[i].neurons) {
+            neuron.bias = lcg.next();
+        }
+    }
 
-    auto& layer3{nn.layers[3]};
-    layer3.neurons[0].weights = {0.5_F, 0.5_F};
-    layer3.neurons[0].bias = 0.5_F;
-    layer3.neurons[1].weights = {0.6_F, 0.6_F};
-    layer3.neurons[1].bias = 0.6_F;
+    [[maybe_unused]] auto r{nn2.forward(input, out)};
 
-    std::vector<std::vector<Float>> input{{1.0_F, 2.0_F}};
-    std::vector<Float> output{};
-
-    [[maybe_unused]] auto result{nn.train(input, {1}, 2, 0.1_F)};
-
-    return nn;
+    fmt::println("{}", out);
 }
 
 }  // namespace
 
 auto main(int /* argc */, char* /* argv */[]) -> int {
-    // run_test_network();
+    run_test_network();
+    return EXIT_SUCCESS;
 
     auto const labels{common::load_labels("train-labels.idx1-ubyte")};
     auto const images{common::load_images("train-images.idx3-ubyte")};
@@ -61,12 +55,49 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
         return EXIT_FAILURE;
     }
 
-    constexpr size_t TRAIN_COUNT{1};
+    size_t constexpr LCG_SEED{42};
+    common::LCG<common::Float> lcg{LCG_SEED};
+
+    size_t constexpr TRAIN_COUNT{1};
     common::Timer trainTimer{};
     double totalTrainTimeMs{0.0};
 
     for (size_t t{0}; t < TRAIN_COUNT; ++t) {
-        impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
+        impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}, lcg};
+
+        // Reinitialize weights and biases.
+        // We want that first all the weights are initialized, then all the biases for a layer, then move to
+        // the next layer.
+        //
+        // However, the Neuron class first initialized only weights for itself and one bios after, then
+        // the next neuron repeats the process. Only then all neurons are initialized, we move to the next layer.
+        //
+        // In psudocode:
+        // for each Layer:
+        //     for each Neuron:
+        //         set neuron weights
+        //         set neuron bias
+        //
+        // This breaks the comparison of results from another implementations, where first all the weights are
+        // initialized and then all the biases.
+        //
+        // In psudocode:
+        // for each Layer:
+        //         set layer weights
+        //         set layer biases
+        lcg = common::LCG<common::Float>{LCG_SEED};
+        for (size_t i{1}; i < nn.layers.size(); ++i) {
+            for (auto& neuron : nn.layers[i].neurons) {
+                for (size_t w{0}; w < neuron.weights.size(); ++w) {
+                    neuron.weights[w] = lcg.next();
+                }
+            }
+
+            for (auto& neuron : nn.layers[i].neurons) {
+                neuron.bias = lcg.next();
+            }
+        }
+
         size_t constexpr EPOCH_COUNT{20};
         common::Float constexpr LEARNING_RATE{1.0};
 

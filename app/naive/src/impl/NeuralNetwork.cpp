@@ -18,15 +18,15 @@ auto shuffle_indices(std::vector<size_t>& indices) noexcept -> void {
 
 namespace impl {
 
-NeuralNetwork::NeuralNetwork(std::vector<size_t> const& layerSizes) {
+NeuralNetwork::NeuralNetwork(std::vector<size_t> const& layerSizes, common::LCG<common::Float>& lcg) {
     if (layerSizes.size() < 2) {
         throw std::runtime_error{"NeuralNetwork must have at least an input and an output layer."};
     }
 
-    layers.emplace_back(layerSizes[0], 0);  // Input layer
+    layers.emplace_back(layerSizes[0], 0, lcg);  // Input layer
 
     for (size_t i{1}; i < layerSizes.size(); ++i) {
-        layers.emplace_back(layerSizes[i], layerSizes[i - 1]);
+        layers.emplace_back(layerSizes[i], layerSizes[i - 1], lcg);
     }
 }
 

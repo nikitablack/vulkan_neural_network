@@ -1,19 +1,15 @@
+#include <common/LCG.hpp>
 #include <impl/Neuron.hpp>
-#include <random>
 
 namespace impl {
 
-Neuron::Neuron(size_t inputCount) noexcept : weights(inputCount) {
-    std::random_device rd{};
-    std::mt19937 gen{rd()};
-    std::uniform_real_distribution<common::Float> dist{-1.0, 1.0};
-
+Neuron::Neuron(size_t inputCount, common::LCG<common::Float>& lcg) noexcept : weights(inputCount) {
     for (size_t i{0}; i < weights.size(); ++i) {
-        common::Float const w{dist(gen)};
+        common::Float const w{lcg.next()};
         weights[i] = w;
     }
 
-    bias = dist(gen);
+    bias = lcg.next();
 }
 
 }  // namespace impl

@@ -2,11 +2,18 @@
 
 #include <impl/Layer.hpp>
 
+namespace common {
+
+template <typename T>
+class LCG;
+
+}
+
 namespace impl {
 
 class NeuralNetwork {
 public:
-    NeuralNetwork(std::vector<size_t> const& layerSizes);
+    NeuralNetwork(std::vector<size_t> const& layerSizes, common::LCG<common::Float>& lcg);
 
     [[nodiscard]] auto forward(std::vector<common::Float> const& inputValues,  //
                                std::vector<common::Float>& outputValues  //
