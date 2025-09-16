@@ -6,6 +6,7 @@ include(FetchContent)
 
 option(VKNN_BUILD_NAIVE "Build naive implementation" ON)
 option(VKNN_BUILD_EIGEN "Build Eigen implementation" ON)
+option(VKNN_BUILD_VULKAN "Build Vulkan implementation" ON)
 
 add_subdirectory(third_party/cmakerc SYSTEM)
 add_subdirectory(third_party/fmt SYSTEM)
@@ -21,6 +22,12 @@ if(VKNN_BUILD_EIGEN)
     add_subdirectory(third_party/eigen SYSTEM)
 
     add_subdirectory(app/eigen)
+endif()
+
+if(VKNN_BUILD_VULKAN)
+    add_subdirectory(third_party/vma SYSTEM)
+
+    add_subdirectory(app/vulkan)
 endif()
 
 cmrc_add_resource_library(cmrc_dataset "")

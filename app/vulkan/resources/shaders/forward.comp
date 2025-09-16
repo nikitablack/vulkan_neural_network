@@ -1,0 +1,88 @@
+#version 450
+
+#extension GL_EXT_debug_printf : enable
+
+
+// TODO: move to specialization constants
+// layout(local_size_x_id = 0) in;
+// layout(local_size_y_id = 1) in;
+// layout(local_size_z_id = 2) in;
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(push_constant) uniform PushConst
+{
+    uint neuronCount;
+    uint inputCount;
+} pushConstants;
+
+// in
+layout (set = 0, binding = 0) readonly buffer Weights {
+    float weights[]; // neuronCount x inputCount, row-major
+};
+
+layout(set = 0, binding = 1) readonly buffer Biases
+{
+    float biases[]; // neuronCount x 1
+};
+
+layout(set = 0, binding = 2) readonly buffer InputValues
+{
+    float inputValues[]; // inputCount x 1
+};
+
+// out
+layout (set = 0, binding = 3) writeonly buffer Values {
+    float values[]; // neuronCount x 1
+};
+
+const uint TILE_SIZE = 64;
+shared float tileCache[TILE_SIZE]; // must match local_size_x
+
+float sigmoid(float v)  {
+    return 1.0f / (1.0f + exp(-v));
+}
+
+void main() {
+    // mat values{weights * inputValues};
+    // values += biases;
+    // values = sigmoid(values);
+
+    const uint row = gl_GlobalInvocationID.x;
+    bool inBounds = (row < pushConstants.neuronCount);
+    const uint rowOffset = row * pushConstants.inputCount;
+
+    float sum = 0.0f;
+
+    for (uint tileStart = 0u; tileStart < pushConstants.inputCount; tileStart += TILE_SIZE) {
+        uint index = tileStart + gl_LocalInvocationID.x;
+
+        if (index < pushConstants.inputCount) {
+            tileCache[gl_LocalInvocationID.x] = inputValues[index];
+        } else {
+            tileCache[gl_LocalInvocationID.x] = 0.0;
+        }
+
+        barrier();
+
+        uint tileSize = min(TILE_SIZE, pushConstants.inputCount - tileStart);
+
+        if(inBounds) {
+            for (uint k = 0u; k < tileSize; ++k) {
+                sum += weights[rowOffset + tileStart + k] * tileCache[k];
+            }
+        }
+
+        barrier();
+    }
+
+    if (row >= pushConstants.neuronCount) 
+    {
+        return;
+    }
+
+    float z = sum + biases[row];
+
+    values[row] = sigmoid(z);
+
+    // debugPrintfEXT("%d %f %f %f %f\n", ind, w, b, prevLayerValue, v);
+}

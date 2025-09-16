@@ -12,6 +12,7 @@ add_library(libs::common
 target_sources(common
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/include/common/Float.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/common/LCG.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/common/load_images.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/common/load_labels.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/include/common/ScopedTimer.hpp

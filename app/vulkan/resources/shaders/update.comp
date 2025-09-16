@@ -1,0 +1,84 @@
+#version 450
+
+#extension GL_EXT_debug_printf : enable
+
+
+// TODO: move to specialization constants
+// layout(local_size_x_id = 0) in;
+// layout(local_size_y_id = 1) in;
+// layout(local_size_z_id = 2) in;
+layout (local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
+
+layout(push_constant) uniform PushConst
+{
+    uint neuronCount;
+    uint neighbourLayerNeuronCount;
+    float learningRate;
+} pushConstants;
+
+// in
+layout (set = 0, binding = 0) buffer Weights {
+    float weights[]; // neuronCount x neighbourLayerNeuronCount, row-major
+};
+
+layout(set = 0, binding = 1) buffer Biases
+{
+    float biases[]; // neuronCount x 1
+};
+
+layout(set = 0, binding = 2) readonly buffer NeighbourLayerValues
+{
+    float neighbourLayerValues[]; // 1 x neighbourLayerNeuronCount
+};
+
+// out
+layout (set = 0, binding = 3) readonly buffer Delta {
+    float delta[]; // neuronCount x 1
+};
+
+const uint TILE_SIZE = 16;
+shared float tileCacheA[TILE_SIZE]; // must match local_size_x
+shared float tileCacheB[TILE_SIZE]; // must match local_size_y
+
+void main() {
+    // mat gradient{delta * neighbourLayerValues};
+    // weights -= learningRate * gradient;
+    // biases -= learningRate * delta;
+
+    const uint totalRows = pushConstants.neuronCount;
+    const uint totalCols = pushConstants.neighbourLayerNeuronCount;
+
+    const uint localRow = gl_LocalInvocationID.y;
+    const uint localCol = gl_LocalInvocationID.x;
+    const uint globalRow = gl_GlobalInvocationID.x;
+    const uint globalCol = gl_GlobalInvocationID.x;
+
+    if (localCol == 0 && globalRow < totalRows) {
+        tileCacheA[localRow] = delta[globalRow];
+    }
+
+    if (localRow == 0 && globalCol < totalCols) {
+        tileCacheB[localCol] = neighbourLayerValues[globalCol];
+    }
+
+    barrier();
+
+    bool inBounds = (globalRow < totalRows) && ((globalCol < totalCols));
+    if(!inBounds){
+        return;
+    }
+
+    const float a = tileCacheA[localRow];
+    const float b = tileCacheB[localCol];
+    const float gradient = a * b;
+
+    const uint rowOffset = globalRow * pushConstants.neighbourLayerNeuronCount;
+
+    const float weigth = weights[rowOffset + globalCol];
+    weights[rowOffset + globalCol] = weigth - pushConstants.learningRate * gradient;
+
+    const float bias = biases[globalRow];
+    biases[globalRow] = bias - pushConstants.learningRate * delta[globalRow];
+
+    // debugPrintfEXT("%d %f %f %f %f\n", ind, w, b, prevLayerValue, v);
+}
