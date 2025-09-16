@@ -153,58 +153,44 @@ auto NeuralNetwork::backward(std::vector<common::Float> const& output,  //
         return false;  // Mismatch in output layer size
     }
 
-    // update output layer
-    using namespace common;
-
-    std::vector<Float> deltaOutput(output.size());
-    for (size_t i{0}; i < output.size(); ++i) {
-        Float const a{output[i]};
-        Float const dCdA{2.0_F * (a - expectedOutput[i]) / output.size()};
-        Float const dAdZ{sigmoidDerivative(a)};
-        deltaOutput[i] = dCdA * dAdZ;
-    }
-
+    // calculate deltas
     {
-        auto const& leftLayer{layers[layers.size() - 2]};
+        // special case - output layer
+        for (size_t i{0}; i < output.size(); ++i) {
+            Float const a{output[i]};
+            Float const dCdA{2.0_F * (a - expectedOutput[i]) / output.size()};
+            Float const dAdZ{sigmoidDerivative(a)};
+            outputLayer.delta[i] = dCdA * dAdZ;
+        }
 
-        if (!outputLayer.update(leftLayer, learningRate, deltaOutput)) {
-            return false;
+        for (size_t layerInd{layers.size() - 2}; layerInd > 0; --layerInd) {
+            auto& layer{layers[layerInd]};
+            auto const& rightLayer{layers[layerInd + 1]};
+
+            // currLayer.neurons.size == rightLayer.neurons[X].weights.size
+            for (size_t i{0}; i < layer.neurons.size(); ++i) {
+                Float deltaSum{0.0};
+
+                for (size_t j{0}; j < rightLayer.neurons.size(); ++j) {
+                    auto& neuron{rightLayer.neurons[j]};
+
+                    deltaSum += rightLayer.delta[j] * neuron.weights[i];
+                }
+
+                layer.delta[i] = deltaSum * sigmoidDerivative(layer.neurons[i].value);
+            }
         }
     }
 
-    // update hidden layers
+    // update layers
     {
-        auto delta{std::move(deltaOutput)};
+        for (size_t layerInd{1}; layerInd < layers.size(); ++layerInd) {
+            auto& layer{layers[layerInd]};
+            auto const& leftLayer{layers[layerInd - 1]};
 
-        auto const* rightLayer{&outputLayer};
-
-        for (size_t lay{layers.size() - 2}; lay > 0; --lay) {
-            auto& currLayer{layers[lay]};
-            auto const& leftLayer{layers[lay - 1]};
-
-            std::vector<Float> deltaHidden(currLayer.neurons.size());
-
-            // delta.size == rightLayer.neurons.size
-            // currLayer.neurons.size == rightLayer.neurons[X].weights.size
-            for (size_t i{0}; i < currLayer.neurons.size(); ++i) {
-                Float deltaSum{0.0};
-
-                for (size_t j{0}; j < rightLayer->neurons.size(); ++j) {
-                    auto& neuron{rightLayer->neurons[j]};
-
-                    deltaSum += delta[j] * neuron.weights[i];
-                }
-
-                deltaHidden[i] = deltaSum * sigmoidDerivative(currLayer.neurons[i].value);
-            }
-
-            if (!currLayer.update(leftLayer, learningRate, deltaHidden)) {
+            if (!layer.update(leftLayer, learningRate)) {
                 return false;
             }
-
-            // Prepare for the next iteration
-            delta = std::move(deltaHidden);
-            rightLayer = &currLayer;
         }
     }
 

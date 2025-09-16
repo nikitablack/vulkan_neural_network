@@ -39,8 +39,8 @@ namespace {
 }  // namespace
 
 auto main(int /* argc */, char* /* argv */[]) -> int {
-    run_test_network();
-    return EXIT_SUCCESS;
+    // run_test_network();
+    // return EXIT_SUCCESS;
 
     auto const labels{common::load_labels("train-labels.idx1-ubyte")};
     auto const images{common::load_images("train-images.idx3-ubyte")};

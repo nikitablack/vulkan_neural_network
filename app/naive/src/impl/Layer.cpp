@@ -15,6 +15,8 @@ Layer::Layer(size_t neuronCount, size_t inputCount, common::LCG<common::Float>& 
             neurons.emplace_back(inputCount, lcg);
         }
     }
+
+    delta.resize(neuronCount);
 }
 
 [[nodiscard]] auto Layer::activate(Layer const& prevLayer,  //
@@ -40,13 +42,8 @@ Layer::Layer(size_t neuronCount, size_t inputCount, common::LCG<common::Float>& 
 }
 
 [[nodiscard]] auto Layer::update(Layer const& prevLayer,  //
-                                 common::Float learningRate,  //
-                                 std::vector<common::Float> const& delta  //
+                                 common::Float learningRate  //
                                  ) noexcept -> bool {
-    if (delta.size() != neurons.size()) {
-        return false;  // Mismatch in delta size
-    }
-
     for (size_t i{0}; i < neurons.size(); ++i) {
         auto& currNeuron{neurons[i]};
 

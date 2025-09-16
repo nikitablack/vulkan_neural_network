@@ -23,12 +23,12 @@ public:
                                 ) noexcept -> bool;
 
     [[nodiscard]] auto update(Layer const& prevLayer,  //
-                              common::Float learningRate,  //
-                              std::vector<common::Float> const& delta  //
+                              common::Float learningRate  //
                               ) noexcept -> bool;
 
 public:
     std::vector<Neuron> neurons{};
+    std::vector<common::Float> delta{};
 };
 
 }  // namespace impl
