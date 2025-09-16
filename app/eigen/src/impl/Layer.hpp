@@ -5,6 +5,13 @@
 #include <functional>
 #include <vector>
 
+namespace common {
+
+template <typename T>
+class LCG;
+
+}
+
 namespace impl {
 
 class Layer {
@@ -15,7 +22,7 @@ public:
 public:
     Layer() noexcept = default;
 
-    Layer(size_t neuronCount, size_t inputCount) noexcept;
+    Layer(size_t neuronCount, size_t inputCount, common::LCG<common::Float>& lcg) noexcept;
 
 public:
     [[nodiscard]] auto activate(Layer const& prevLayer,  //
@@ -23,8 +30,7 @@ public:
                                 ) noexcept -> bool;
 
     [[nodiscard]] auto update(Layer const& prevLayer,  //
-                              common::Float learningRate,  //
-                              MatrixX const& delta  //
+                              common::Float learningRate  //
                               ) noexcept -> bool;
 
     size_t size() const noexcept;
@@ -33,6 +39,7 @@ public:
     MatrixX weights{};
     MatrixX biases{};
     MatrixX values{};
+    MatrixX delta{};
 };
 
 }  // namespace impl

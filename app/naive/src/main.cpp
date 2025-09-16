@@ -13,25 +13,25 @@ namespace {
 [[maybe_unused]] auto run_test_network() -> void {
     common::LCG<common::Float> lcg{42};
 
-    std::vector<float> input(784);
-    std::vector<float> out(10);
+    std::vector<common::Float> input(784);
+    std::vector<common::Float> out(10);
 
-    impl::NeuralNetwork nn2{{input.size(), 100, out.size()}, lcg};
+    impl::NeuralNetwork nn{{input.size(), 100, out.size()}, lcg};
 
     lcg = common::LCG<common::Float>{42};
-    for (size_t i{1}; i < nn2.layers.size(); ++i) {
-        for (auto& neuron : nn2.layers[i].neurons) {
+    for (size_t i{1}; i < nn.layers.size(); ++i) {
+        for (auto& neuron : nn.layers[i].neurons) {
             for (size_t w{0}; w < neuron.weights.size(); ++w) {
                 neuron.weights[w] = lcg.next();
             }
         }
 
-        for (auto& neuron : nn2.layers[i].neurons) {
+        for (auto& neuron : nn.layers[i].neurons) {
             neuron.bias = lcg.next();
         }
     }
 
-    [[maybe_unused]] auto r{nn2.forward(input, out)};
+    [[maybe_unused]] auto r{nn.forward(input, out)};
 
     fmt::println("{}", out);
 }
@@ -125,6 +125,10 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
                 if (!nn.forward(testImages[i], output)) {
                     fmt::println("Failed to compute forward pass for test image {}.", i);
                     return EXIT_FAILURE;
+                }
+
+                if (i % 100 == 0) {
+                    fmt::println("{}", output);
                 }
 
                 auto const maxIt{std::max_element(output.begin(), output.end())};

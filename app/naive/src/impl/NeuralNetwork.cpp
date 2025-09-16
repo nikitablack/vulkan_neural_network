@@ -1,5 +1,6 @@
 #include <fmt/core.h>
 
+#include <common/LCG.hpp>
 #include <common/Timer.hpp>
 #include <impl/NeuralNetwork.hpp>
 #include <iostream>
@@ -9,9 +10,8 @@
 namespace {
 
 auto shuffle_indices(std::vector<size_t>& indices) noexcept -> void {
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::shuffle(indices.begin(), indices.end(), g);
+    std::mt19937 engine{100};
+    std::shuffle(indices.begin(), indices.end(), engine);
 }
 
 }  // namespace
@@ -172,9 +172,9 @@ auto NeuralNetwork::backward(std::vector<common::Float> const& output,  //
                 Float deltaSum{0.0};
 
                 for (size_t j{0}; j < rightLayer.neurons.size(); ++j) {
-                    auto& neuron{rightLayer.neurons[j]};
+                    auto& rightLayerNeuron{rightLayer.neurons[j]};
 
-                    deltaSum += rightLayer.delta[j] * neuron.weights[i];
+                    deltaSum += rightLayer.delta[j] * rightLayerNeuron.weights[i];
                 }
 
                 layer.delta[i] = deltaSum * sigmoidDerivative(layer.neurons[i].value);

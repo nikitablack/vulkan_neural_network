@@ -1,5 +1,7 @@
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
+#include <common/LCG.hpp>
 #include <common/load_images.hpp>
 #include <common/load_labels.hpp>
 #include <cstdlib>
@@ -7,51 +9,23 @@
 
 namespace {
 
-[[maybe_unused]] auto run_test_network() -> impl::NeuralNetwork {
-    using namespace common;
+[[maybe_unused]] auto run_test_network() -> void {
+    common::LCG<common::Float> lcg{42};
 
-    auto nn{impl::NeuralNetwork{std::vector<size_t>{2, 2, 2, 2}}};
+    auto nn{impl::NeuralNetwork{std::vector<size_t>{784, 100, 10}, lcg}};
 
-    auto& layer0{nn.layers[0]};
-    layer0.values(0, 0) = 1.0_F;
-    layer0.values(1, 0) = 2.0_F;
+    std::vector<common::Float> input(784);
+    std::vector<common::Float> out{};
+    [[maybe_unused]] auto r{nn.forward(input, out)};
 
-    auto& layer1{nn.layers[1]};
-    layer1.weights(0, 0) = 0.1_F;
-    layer1.weights(0, 1) = 0.1_F;
-    layer1.weights(1, 0) = 0.2_F;
-    layer1.weights(1, 1) = 0.2_F;
-    layer1.biases(0, 0) = 0.1_F;
-    layer1.biases(1, 0) = 0.2_F;
-
-    auto& layer2{nn.layers[2]};
-    layer2.weights(0, 0) = 0.3_F;
-    layer2.weights(0, 1) = 0.3_F;
-    layer2.weights(1, 0) = 0.4_F;
-    layer2.weights(1, 1) = 0.4_F;
-    layer2.biases(0, 0) = 0.3_F;
-    layer2.biases(1, 0) = 0.4_F;
-
-    auto& layer3{nn.layers[3]};
-    layer3.weights(0, 0) = 0.5_F;
-    layer3.weights(0, 1) = 0.5_F;
-    layer3.weights(1, 0) = 0.6_F;
-    layer3.weights(1, 1) = 0.6_F;
-    layer3.biases(0, 0) = 0.5_F;
-    layer3.biases(1, 0) = 0.6_F;
-
-    std::vector<std::vector<Float>> input{{1.0_F, 2.0_F}};
-    std::vector<Float> output{};
-
-    [[maybe_unused]] auto result{nn.train(input, {1}, 2, 0.1_F)};
-
-    return nn;
+    fmt::println("{}", out);
 }
 
 }  // namespace
 
 auto main(int /* argc */, char* /* argv */[]) -> int {
     // run_test_network();
+    // return EXIT_SUCCESS;
 
 #if defined(EIGEN_VECTORIZE_AVX512)
     fmt::println("Using AVX-512");
@@ -78,7 +52,9 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
         return EXIT_FAILURE;
     }
 
-    impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}};
+    common::LCG<common::Float> lcg{42};
+
+    impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}, lcg};
     size_t constexpr EPOCH_COUNT{20};
     common::Float constexpr LEARNING_RATE{1.0};
 
@@ -103,7 +79,12 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
         for (size_t i{0}; i < testLabels.size(); ++i) {
             if (!nn.forward(testImages[i], output)) {
                 fmt::println("Failed to compute forward pass for test image {}.", i);
+
                 return EXIT_FAILURE;
+            }
+
+            if (i % 100 == 0) {
+                fmt::println("{}", output);
             }
 
             auto const maxIt{std::max_element(output.begin(), output.end())};

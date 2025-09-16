@@ -1,25 +1,21 @@
 #include <fmt/core.h>
 
+#include <common/LCG.hpp>
 #include <impl/Layer.hpp>
-#include <random>
 
 namespace impl {
 
-Layer::Layer(size_t neuronCount, size_t inputCount) noexcept
-    : weights{neuronCount, inputCount}, biases{neuronCount, 1}, values{neuronCount, 1} {
+Layer::Layer(size_t neuronCount, size_t inputCount, common::LCG<common::Float>& lcg) noexcept
+    : weights{neuronCount, inputCount}, biases{neuronCount, 1}, values{neuronCount, 1}, delta{neuronCount, 1} {
     if (inputCount > 0) {
-        std::random_device rd{};
-        std::mt19937 gen{rd()};
-        std::uniform_real_distribution<common::Float> dist{-1.0, 1.0};
-
         for (Eigen::Index r{0}; r < weights.rows(); ++r) {
             for (Eigen::Index c{0}; c < weights.cols(); ++c) {
-                weights(r, c) = dist(gen);
+                weights(r, c) = lcg.next();
             }
         }
 
         for (Eigen::Index r{0}; r < biases.rows(); ++r) {
-            biases(r, 0) = dist(gen);
+            biases(r, 0) = lcg.next();
         }
     }
 }
@@ -41,13 +37,8 @@ Layer::Layer(size_t neuronCount, size_t inputCount) noexcept
 }
 
 [[nodiscard]] auto Layer::update(Layer const& prevLayer,  //
-                                 common::Float learningRate,  //
-                                 MatrixX const& delta  //
+                                 common::Float learningRate  //
                                  ) noexcept -> bool {
-    if (static_cast<size_t>(delta.rows()) != size()) {
-        return false;  // Mismatch in delta size
-    }
-
     MatrixX const gradient{delta * prevLayer.values.transpose()};
 
     weights -= learningRate * gradient;
