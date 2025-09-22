@@ -1,0 +1,117 @@
+#version 450
+
+#extension GL_EXT_debug_printf : enable
+
+layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+layout(push_constant) uniform PushConst
+{
+    uint neuronCount;
+    uint neighbourLayerNeuronCount; // used only by hidden layer
+    uint outputLayer; // 1 - output layer, 0 - hidden layer
+    uint outputOffset;
+} pushConstants;
+
+layout (set = 0, binding = 0) readonly buffer NeighbourWeights {
+    // used only by hidden layer
+    float neighbourWeights[]; // neighbourLayerNeuronCount x neuronCount, row-major
+};
+
+layout(set = 0, binding = 1) readonly buffer Values
+{
+    float values[]; // neuronCount x 1
+};
+
+layout(set = 0, binding = 2) readonly buffer ExpectedOutput
+{
+    // used only by output layer
+    float expectedOutput[]; // neuronCount x 1
+};
+
+// uses the same binding slot. Depending on dispatch either this or the other will be bound
+layout(set = 0, binding = 2) readonly buffer NeighbourDelta
+{
+    // used only by hidden layer
+    float neighbourDelta[]; // neighbourLayerNeuronCount x 1
+};
+
+layout (set = 0, binding = 3) writeonly buffer Delta {
+    float delta[]; // neuronCount x 1
+};
+
+float sigmoid_derivative(float sigmoidResult) {
+    return sigmoidResult * (1.0f - sigmoidResult);
+}
+
+const uint TILE_SIZE = 64;
+shared float tileCache[TILE_SIZE]; // must match local_size_x
+
+void main() {
+    if(pushConstants.outputLayer == 1){
+        // output layer:
+        //     dCdA = 2.0f * (values - expectedOutput) / neuronCount;
+        //     dAdZ = sigmoid_derivative(values);
+        //     delta = dCdA * dAdZ;
+
+        const uint row = gl_GlobalInvocationID.x;
+
+        if(row >= pushConstants.neuronCount){
+            return;
+        }
+
+        const float val = values[row];
+        const float dCdA = 2.0f * (val - expectedOutput[pushConstants.outputOffset + row]) / pushConstants.neuronCount;
+        const float dAdZ = sigmoid_derivative(val);
+
+        delta[row] = dCdA * dAdZ;
+    }else{
+        // hidden layer
+        //     mat wt = neighbourWeights.transpose();
+        //     vec wtd = wt * neighbourDelta;
+        //     vec dZ = sigmoid_derivative(values);
+        //     delta = wtd.cwiseProduct(dZ);
+
+        const uint row = gl_GlobalInvocationID.x;
+        bool inBounds = (row < pushConstants.neuronCount);
+
+        float sum = 0.0f;
+
+        for (uint tileStart = 0u; tileStart < pushConstants.neighbourLayerNeuronCount; tileStart += TILE_SIZE) {
+            const uint index = tileStart + gl_LocalInvocationID.x;
+
+            if (index < pushConstants.neighbourLayerNeuronCount) {
+                tileCache[gl_LocalInvocationID.x] = neighbourDelta[index];
+            } else {
+                tileCache[gl_LocalInvocationID.x] = 0.0;
+            }
+
+            barrier();
+
+            const uint tileSize = min(TILE_SIZE, pushConstants.neighbourLayerNeuronCount - tileStart);
+
+            if(inBounds) {
+                for (uint k = 0; k < tileSize; ++k) {
+                    const uint index = (tileStart + k) * pushConstants.neuronCount + row;
+                    if(index >= 1000){
+                        debugPrintfEXT("%d %d %d %d %d %d %d\n", row, index, tileStart, k, pushConstants.neuronCount, pushConstants.neighbourLayerNeuronCount, tileSize);
+                    }
+                    
+                    sum += neighbourWeights[(tileStart + k) * pushConstants.neuronCount + row] * tileCache[k];
+                }
+            }
+
+            barrier();
+        }
+
+        if(!inBounds){
+            return;
+        }
+
+        const float val = values[row];
+        float dz = sigmoid_derivative(val);
+
+        delta[row] = sum * dz;
+
+        // debugPrintfEXT("%d %f\n", row, sum);
+    }
+}

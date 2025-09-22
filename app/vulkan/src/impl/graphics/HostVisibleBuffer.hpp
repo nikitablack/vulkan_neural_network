@@ -29,12 +29,13 @@ public:
     auto getBuffer() const noexcept -> VkBuffer;
     auto getMappedData() const noexcept -> void const*;
 
+    void* m_mappedData{nullptr};
+
 private:
     VmaAllocator m_allocator{VK_NULL_HANDLE};
     VkBuffer m_buffer{VK_NULL_HANDLE};
     uint64_t m_size{0};
     VmaAllocation m_allocation{VK_NULL_HANDLE};
-    void* m_mappedData{nullptr};
 };
 
 }  // namespace graphics

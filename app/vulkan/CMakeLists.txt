@@ -18,9 +18,14 @@ target_sources(vulkan_nn
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/utils/init_helper.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/utils/read_float_helper.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/utils/read_float_helper.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/utils/update_descriptor_set.hpp
 
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/allocate_descriptor_set.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/allocate_descriptor_set.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/calculate_hidden_delta.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/calculate_hidden_delta.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/calculate_output_delta.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/calculate_output_delta.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/check_instance_version.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/check_instance_version.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/check_physical_device_support.cpp
@@ -31,6 +36,8 @@ target_sources(vulkan_nn
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/CommandManager.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_allocator.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_allocator.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_delta_pipeline.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_delta_pipeline.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_descriptor_pool.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_descriptor_pool.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_descriptor_set_layout.cpp
@@ -154,6 +161,7 @@ endfunction()
 addCompileShadersCommand(TARGET_NAME compile_shaders
     OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders
     SHADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/delta.comp
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/forward.comp
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/update.comp
 )

@@ -1,6 +1,7 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <common/LCG.hpp>
 #include <common/load_images.hpp>
 #include <common/load_labels.hpp>
@@ -55,6 +56,7 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
     common::LCG<common::Float> lcg{42};
 
     impl::NeuralNetwork nn{std::vector<size_t>{784, 100, 10}, lcg};
+
     size_t constexpr EPOCH_COUNT{20};
     common::Float constexpr LEARNING_RATE{1.0};
 
@@ -83,12 +85,8 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
                 return EXIT_FAILURE;
             }
 
-            if (i % 100 == 0) {
-                fmt::println("{}", output);
-            }
-
             auto const maxIt{std::max_element(output.begin(), output.end())};
-            auto predictedLabel{static_cast<uint8_t>(std::distance(output.begin(), maxIt))};
+            auto const predictedLabel{static_cast<uint8_t>(std::distance(output.begin(), maxIt))};
 
             if (predictedLabel == testLabels[i]) {
                 ++correctCount;

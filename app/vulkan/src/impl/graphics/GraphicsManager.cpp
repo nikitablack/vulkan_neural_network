@@ -1,55 +1,26 @@
 #define VMA_IMPLEMENTATION
 #include <fmt/core.h>
 
+#include <array>
 #include <impl/graphics/DeviceBuffer.hpp>
+#include <impl/graphics/GraphicsManager.hpp>
+#include <impl/graphics/VulkanFunctions.hpp>
 #include <impl/graphics/allocate_descriptor_set.hpp>
-// #include <impl/graphics/begin_compose_rendering.hpp>
-// #include <impl/graphics/begin_render_target_rendering.hpp>
 #include <impl/graphics/check_instance_version.hpp>
-// #include <impl/graphics/check_physical_device_support.hpp>
 #include <impl/graphics/check_required_instance_extensions.hpp>
 #include <impl/graphics/create_allocator.hpp>
+#include <impl/graphics/create_delta_pipeline.hpp>
 #include <impl/graphics/create_descriptor_pool.hpp>
 #include <impl/graphics/create_descriptor_set_layout.hpp>
 #include <impl/graphics/create_device.hpp>
-// #include <impl/graphics/create_fences.hpp>
-// #include <impl/graphics/create_fullscreen_triangle_pipeline.hpp>
-// #include <impl/graphics/create_gltf_pipeline.hpp>
-// #include <impl/graphics/create_gltf_skinned_pipeline.hpp>
-// #include <impl/graphics/create_imgui_font_image.hpp>
-// #include <impl/graphics/create_imgui_pipeline.hpp>
-#include <impl/graphics/create_instance.hpp>
-// #include <impl/graphics/create_linear_sampler.hpp>
 #include <impl/graphics/create_forward_pipeline.hpp>
+#include <impl/graphics/create_instance.hpp>
 #include <impl/graphics/create_pipeline_layout.hpp>
-// #include <impl/graphics/create_semaphore.hpp>
-// #include <impl/graphics/create_surface.hpp>
-// #include <impl/graphics/create_swapchain.hpp>
-// #include <impl/graphics/create_swapchain_image_views.hpp>
-// #include <impl/graphics/create_unit_image.hpp>
-// #include <impl/graphics/draw_fullscreen_triangle.hpp>
-// #include <impl/graphics/draw_imgui.hpp>
-// #include <impl/graphics/get_depth_format.hpp>
+#include <impl/graphics/create_update_pipeline.hpp>
 #include <impl/graphics/get_compute_queue.hpp>
 #include <impl/graphics/get_compute_queue_family.hpp>
 #include <impl/graphics/get_physical_device_properties.hpp>
-// #include <impl/graphics/get_present_mode.hpp>
 #include <impl/graphics/get_supported_physical_devices.hpp>
-// #include <impl/graphics/get_surface_capabilities.hpp>
-// #include <impl/graphics/get_surface_extent.hpp>
-// #include <impl/graphics/get_surface_format.hpp>
-// #include <impl/graphics/get_swapchain_image_index.hpp>
-// #include <impl/graphics/get_swapchain_images.hpp>
-// #include <impl/graphics/present.hpp>
-// #include <impl/graphics/set_fullscreen_triangle_rendering_state.hpp>
-// #include <impl/graphics/set_imgui_rendering_state.hpp>
-// #include <impl/graphics/setup_imgui.hpp>
-#include <impl/graphics/submit.hpp>
-// #include <utils/graphics/barrier_helper.hpp>
-#include <array>
-#include <impl/graphics/GraphicsManager.hpp>
-#include <impl/graphics/VulkanFunctions.hpp>
-#include <impl/graphics/utils/get_push_constant_data.hpp>
 
 namespace impl {
 namespace graphics {
@@ -121,10 +92,13 @@ auto GraphicsManager::changePhysicalDevice() -> void {
     descriptorPool = create_descriptor_pool(device);
     debugUtils.setName(descriptorPool, "Descriptor pool.");
 
+    deltaPipeline = create_delta_pipeline(device, pipelineLayout);
+    debugUtils.setName(deltaPipeline, "Delta pipeline.");
+
     forwardPipeline = create_forward_pipeline(device, pipelineLayout);
     debugUtils.setName(forwardPipeline, "Forward pipeline.");
 
-    updatePipeline = create_forward_pipeline(device, pipelineLayout);
+    updatePipeline = create_update_pipeline(device, pipelineLayout);
     debugUtils.setName(updatePipeline, "Update pipeline.");
 }
 
@@ -140,6 +114,9 @@ auto GraphicsManager::clear() noexcept -> void {
 
     vkDestroyPipeline(device, forwardPipeline, nullptr);
     forwardPipeline = VK_NULL_HANDLE;
+
+    vkDestroyPipeline(device, deltaPipeline, nullptr);
+    deltaPipeline = VK_NULL_HANDLE;
 
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     descriptorPool = VK_NULL_HANDLE;

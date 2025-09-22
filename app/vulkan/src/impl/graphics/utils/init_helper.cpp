@@ -49,6 +49,29 @@ auto init_buffer(VkCommandBuffer commandBuffer,  //
     return stagingBuffer;
 }
 
+auto init_buffer(VkCommandBuffer commandBuffer,  //
+                 DeviceBuffer& deviceBuffer,  //
+                 HostVisibleBuffer const& stagingBuffer,  //
+                 VkPipelineStageFlags dstStageMask,  //
+                 VkAccessFlags dstAccessMask  //
+                 ) noexcept -> void {
+    set_buffer_barrier(commandBuffer,  //
+                       deviceBuffer,  //
+                       VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,  //
+                       VK_ACCESS_NONE,  //
+                       VK_PIPELINE_STAGE_TRANSFER_BIT,  //
+                       VK_ACCESS_TRANSFER_WRITE_BIT);
+
+    deviceBuffer.copyData(commandBuffer, stagingBuffer);
+
+    set_buffer_barrier(commandBuffer,  //
+                       deviceBuffer,  //
+                       VK_PIPELINE_STAGE_TRANSFER_BIT,  //
+                       VK_ACCESS_TRANSFER_WRITE_BIT,  //
+                       dstStageMask,  //
+                       dstAccessMask);
+}
+
 auto init_buffer_sync(CommandManager& commandManager,  //
                       DeviceBuffer& deviceBuffer,  //
                       std::vector<uint8_t> const& data,  //
@@ -81,6 +104,27 @@ auto init_buffer_sync(CommandManager& commandManager,  //
                                          size,  //
                                          dstStageMask,  //
                                          dstAccessMask)};
+
+    std::unordered_map<VkCommandBuffer, std::vector<HostVisibleBuffer>> cbToStagingBuffers{};
+    cbToStagingBuffers[commandBuffer].push_back(stagingBuffer);
+
+    return submit_init_data_sync(std::move(cbToStagingBuffers), queue);
+}
+
+auto init_buffer_sync(CommandManager& commandManager,  //
+                      DeviceBuffer& deviceBuffer,  //
+                      HostVisibleBuffer&& stagingBuffer,  //
+                      VkPipelineStageFlags dstStageMask,  //
+                      VkAccessFlags dstAccessMask,  //
+                      VulkanQueue const& queue  //
+                      ) -> void {
+    auto const commandBuffer{commandManager.getCommandBufferBegin()};
+
+    init_buffer(commandBuffer,  //
+                deviceBuffer,  //
+                stagingBuffer,  //
+                dstStageMask,  //
+                dstAccessMask);
 
     std::unordered_map<VkCommandBuffer, std::vector<HostVisibleBuffer>> cbToStagingBuffers{};
     cbToStagingBuffers[commandBuffer].push_back(stagingBuffer);

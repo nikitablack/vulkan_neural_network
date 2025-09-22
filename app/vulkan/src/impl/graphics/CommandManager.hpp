@@ -16,9 +16,10 @@ public:
     auto tick() -> void;
     auto clear() noexcept -> void;
 
+    VkCommandPool m_commandPool{VK_NULL_HANDLE};
+
 private:
     VkDevice m_device{VK_NULL_HANDLE};
-    VkCommandPool m_commandPool{VK_NULL_HANDLE};
     std::vector<VkCommandBuffer> m_availableCommandBuffers{};
     std::vector<VkCommandBuffer> m_busyCommandBuffers{};
 };

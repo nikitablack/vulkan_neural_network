@@ -14,6 +14,20 @@ auto shuffle_indices(std::vector<size_t>& indices) noexcept -> void {
     std::shuffle(indices.begin(), indices.end(), engine);
 }
 
+auto print_matrix(impl::Layer::MatrixX const& m) -> void {
+    std::cout << "[";
+    for (int r{0}; r < m.rows(); ++r) {
+        for (int c{0}; c < m.cols(); ++c) {
+            if (r == (m.rows() - 1) && c == (m.cols() - 1)) {
+                std::cout << m(r, c) << "]";
+            } else {
+                std::cout << m(r, c) << ", ";
+            }
+        }
+    }
+    std::cout << std::endl;
+}
+
 }  // namespace
 
 namespace impl {
@@ -89,7 +103,7 @@ auto NeuralNetwork::train(std::vector<std::vector<common::Float>> const& input, 
 
         Float epochLoss{0.0};
 
-        for (size_t i{0}; i < indices.size(); ++i) {
+        for (size_t i{0}; i < 100 /*indices.size()*/; ++i) {
             auto const idx{indices[i]};
 
             if (!forward(input[idx], output)) {
@@ -186,6 +200,8 @@ auto NeuralNetwork::backward(std::vector<common::Float> const& output,  //
                 return false;
             }
         }
+
+        print_matrix(layers[2].biases);
     }
 
     return true;

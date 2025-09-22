@@ -14,7 +14,7 @@ auto create_descriptor_pool(VkDevice device) -> VkDescriptorPool {
     info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     info.pNext = nullptr;
     info.flags = 0;
-    info.maxSets = 100;
+    info.maxSets = 500;
     info.poolSizeCount = 1;
     info.pPoolSizes = &poolSize;
 

@@ -13,6 +13,7 @@ layout(push_constant) uniform PushConst
 {
     uint neuronCount;
     uint neighbourLayerNeuronCount;
+    uint neighbourOffset;
     float learningRate;
 } pushConstants;
 
@@ -50,7 +51,7 @@ void main() {
 
     const uint localRow = gl_LocalInvocationID.y;
     const uint localCol = gl_LocalInvocationID.x;
-    const uint globalRow = gl_GlobalInvocationID.x;
+    const uint globalRow = gl_GlobalInvocationID.y;
     const uint globalCol = gl_GlobalInvocationID.x;
 
     if (localCol == 0 && globalRow < totalRows) {
@@ -58,7 +59,7 @@ void main() {
     }
 
     if (localRow == 0 && globalCol < totalCols) {
-        tileCacheB[localCol] = neighbourLayerValues[globalCol];
+        tileCacheB[localCol] = neighbourLayerValues[pushConstants.neighbourOffset + globalCol];
     }
 
     barrier();
@@ -74,11 +75,13 @@ void main() {
 
     const uint rowOffset = globalRow * pushConstants.neighbourLayerNeuronCount;
 
-    const float weigth = weights[rowOffset + globalCol];
-    weights[rowOffset + globalCol] = weigth - pushConstants.learningRate * gradient;
+    const float weight = weights[rowOffset + globalCol];
+    weights[rowOffset + globalCol] = weight - pushConstants.learningRate * gradient;
 
-    const float bias = biases[globalRow];
-    biases[globalRow] = bias - pushConstants.learningRate * delta[globalRow];
+    if(globalCol == 0){
+        const float bias = biases[globalRow];
+        biases[globalRow] = bias - pushConstants.learningRate * delta[globalRow];
+    }
 
     // debugPrintfEXT("%d %f %f %f %f\n", ind, w, b, prevLayerValue, v);
 }

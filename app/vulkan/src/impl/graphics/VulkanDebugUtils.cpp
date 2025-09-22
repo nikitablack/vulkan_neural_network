@@ -20,6 +20,10 @@ auto VulkanDebugUtils::setName(VkDescriptorSetLayout object, std::string const& 
     setName(VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT, reinterpret_cast<uint64_t>(object), name);
 }
 
+auto VulkanDebugUtils::setName(VkFence object, std::string const& name) const noexcept -> void {
+    setName(VK_OBJECT_TYPE_FENCE, reinterpret_cast<uint64_t>(object), name);
+}
+
 auto VulkanDebugUtils::setName(VkPipeline object, std::string const& name) const noexcept -> void {
     setName(VK_OBJECT_TYPE_PIPELINE, reinterpret_cast<uint64_t>(object), name);
 }

@@ -1,4 +1,5 @@
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
 #include <common/LCG.hpp>
 #include <common/Timer.hpp>
@@ -98,6 +99,8 @@ auto NeuralNetwork::train(std::vector<std::vector<common::Float>> const& input, 
                 return false;
             }
 
+            fmt::println("{}", output);
+
             auto const& outputLayer{layers.back()};
 
             expectedOutput.resize(outputLayer.neurons.size());
@@ -180,6 +183,8 @@ auto NeuralNetwork::backward(std::vector<common::Float> const& output,  //
                 layer.delta[i] = deltaSum * sigmoidDerivative(layer.neurons[i].value);
             }
         }
+
+        fmt::println("{}", layers[1].delta);
     }
 
     // update layers

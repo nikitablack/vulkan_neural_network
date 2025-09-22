@@ -4,7 +4,7 @@
 namespace impl {
 namespace graphics {
 
-auto submit(VkCommandBuffer commandBuffer, VkQueue queue) -> void {
+auto submit(VkCommandBuffer commandBuffer, VkQueue queue, VkFence fence) -> void {
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
     submitInfo.pNext = nullptr;
@@ -16,7 +16,7 @@ auto submit(VkCommandBuffer commandBuffer, VkQueue queue) -> void {
     submitInfo.signalSemaphoreCount = 0;
     submitInfo.pSignalSemaphores = nullptr;
 
-    if (vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE) != VK_SUCCESS) {
+    if (vkQueueSubmit(queue, 1, &submitInfo, fence) != VK_SUCCESS) {
         throw std::runtime_error{"Failed to submit."};
     }
 }

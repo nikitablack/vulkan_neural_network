@@ -5,7 +5,7 @@
 namespace impl {
 namespace graphics {
 
-auto submit(VkCommandBuffer commandBuffer, VkQueue queue) -> void;
+auto submit(VkCommandBuffer commandBuffer, VkQueue queue, VkFence fence) -> void;
 
 }  // namespace graphics
 }  // namespace impl

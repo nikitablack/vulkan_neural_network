@@ -31,6 +31,13 @@ namespace utils {
                                VkAccessFlags dstAccessMask  //
                                ) -> HostVisibleBuffer;
 
+auto init_buffer(VkCommandBuffer commandBuffer,  //
+                 DeviceBuffer& deviceBuffer,  //
+                 HostVisibleBuffer const& stagingBuffer,  //
+                 VkPipelineStageFlags dstStageMask,  //
+                 VkAccessFlags dstAccessMask  //
+                 ) noexcept -> void;
+
 auto init_buffer_sync(CommandManager& commandManager,  //
                       DeviceBuffer& deviceBuffer,  //
                       std::vector<uint8_t> const& data,  //
@@ -47,6 +54,15 @@ auto init_buffer_sync(CommandManager& commandManager,  //
                       VkAccessFlags dstAccessMask,  //
                       VulkanQueue const& queue  //
                       ) -> void;
+
+auto init_buffer_sync(
+    CommandManager& commandManager,  //
+    DeviceBuffer& deviceBuffer,  //
+    HostVisibleBuffer&& stagingBuffer,  // pass ownership to the function. The buffer will be destroyed.
+    VkPipelineStageFlags dstStageMask,  //
+    VkAccessFlags dstAccessMask,  //
+    VulkanQueue const& queue  //
+    ) -> void;
 
 auto submit_init_data_sync(std::unordered_map<VkCommandBuffer, std::vector<HostVisibleBuffer>>&& initData,  //
                            VulkanQueue const& queue  //

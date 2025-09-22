@@ -13,6 +13,7 @@ layout(push_constant) uniform PushConst
 {
     uint neuronCount;
     uint inputCount;
+    uint inputOffset;
 } pushConstants;
 
 // in
@@ -43,7 +44,7 @@ float sigmoid(float v)  {
 }
 
 void main() {
-    // mat values{weights * inputValues};
+    // mat values = weights * inputValues;
     // values += biases;
     // values = sigmoid(values);
 
@@ -57,7 +58,7 @@ void main() {
         uint index = tileStart + gl_LocalInvocationID.x;
 
         if (index < pushConstants.inputCount) {
-            tileCache[gl_LocalInvocationID.x] = inputValues[index];
+            tileCache[gl_LocalInvocationID.x] = inputValues[pushConstants.inputOffset + index];
         } else {
             tileCache[gl_LocalInvocationID.x] = 0.0;
         }
@@ -75,8 +76,7 @@ void main() {
         barrier();
     }
 
-    if (row >= pushConstants.neuronCount) 
-    {
+    if(!inBounds){
         return;
     }
 

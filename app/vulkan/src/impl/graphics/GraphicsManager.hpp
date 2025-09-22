@@ -42,6 +42,7 @@ public:
     VkPipelineLayout pipelineLayout{VK_NULL_HANDLE};
     VkDescriptorPool descriptorPool{VK_NULL_HANDLE};
     std::vector<VkDescriptorSet> storageDescriptorSets{};
+    VkPipeline deltaPipeline{VK_NULL_HANDLE};
     VkPipeline forwardPipeline{VK_NULL_HANDLE};
     VkPipeline updatePipeline{VK_NULL_HANDLE};
 };

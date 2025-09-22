@@ -70,17 +70,23 @@ auto DeviceBuffer::copyData(VkCommandBuffer commandBuffer,  //
     HostVisibleBuffer stagingBuffer{};
 
     stagingBuffer.init(m_allocator, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, size);
+    stagingBuffer.copyData(data, size, 0);
 
-    stagingBuffer.copyData(data, size, offset);
+    copyData(commandBuffer, stagingBuffer, offset);
 
+    return stagingBuffer;
+}
+
+auto DeviceBuffer::copyData(VkCommandBuffer commandBuffer,  //
+                            HostVisibleBuffer const& stagingBuffer,  //
+                            size_t offset  //
+                            ) noexcept -> void {
     VkBufferCopy region{};
     region.srcOffset = 0;
     region.dstOffset = offset;
     region.size = stagingBuffer.getSize();
 
     vkCmdCopyBuffer(commandBuffer, stagingBuffer.getBuffer(), m_buffer, 1, &region);
-
-    return stagingBuffer;
 }
 
 auto DeviceBuffer::getSize() const noexcept -> size_t {

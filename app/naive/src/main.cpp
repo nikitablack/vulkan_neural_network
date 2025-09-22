@@ -1,6 +1,7 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <common/LCG.hpp>
 #include <common/Timer.hpp>
 #include <common/load_images.hpp>
@@ -42,8 +43,10 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
     // run_test_network();
     // return EXIT_SUCCESS;
 
-    auto const labels{common::load_labels("train-labels.idx1-ubyte")};
-    auto const images{common::load_images("train-images.idx3-ubyte")};
+    using namespace common;
+
+    auto const labels{load_labels("train-labels.idx1-ubyte")};
+    auto const images{load_images("train-images.idx3-ubyte")};
 
     if (labels.empty() || images.empty()) {
         fmt::println("Failed to load dataset labels or images.");
@@ -56,10 +59,10 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
     }
 
     size_t constexpr LCG_SEED{42};
-    common::LCG<common::Float> lcg{LCG_SEED};
+    LCG<Float> lcg{LCG_SEED};
 
     size_t constexpr TRAIN_COUNT{1};
-    common::Timer trainTimer{};
+    Timer trainTimer{};
     double totalTrainTimeMs{0.0};
 
     for (size_t t{0}; t < TRAIN_COUNT; ++t) {
@@ -85,7 +88,7 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
         // for each Layer:
         //         set layer weights
         //         set layer biases
-        lcg = common::LCG<common::Float>{LCG_SEED};
+        lcg = LCG<Float>{LCG_SEED};
         for (size_t i{1}; i < nn.layers.size(); ++i) {
             for (auto& neuron : nn.layers[i].neurons) {
                 for (size_t w{0}; w < neuron.weights.size(); ++w) {
@@ -99,7 +102,7 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
         }
 
         size_t constexpr EPOCH_COUNT{20};
-        common::Float constexpr LEARNING_RATE{1.0};
+        Float constexpr LEARNING_RATE{1.0_F};
 
         trainTimer.start();
         if (!nn.train(images, labels, EPOCH_COUNT, LEARNING_RATE)) {
@@ -110,10 +113,10 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
 
         // test
         {
-            std::vector<common::Float> output{};
+            std::vector<Float> output{};
 
-            auto const testLabels{common::load_labels("t10k-labels.idx1-ubyte")};
-            auto const testImages{common::load_images("t10k-images.idx3-ubyte")};
+            auto const testLabels{load_labels("t10k-labels.idx1-ubyte")};
+            auto const testImages{load_images("t10k-images.idx3-ubyte")};
 
             if (testLabels.size() != testImages.size()) {
                 fmt::println("Mismatch between number of test labels and images.");
@@ -127,12 +130,8 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
                     return EXIT_FAILURE;
                 }
 
-                if (i % 100 == 0) {
-                    fmt::println("{}", output);
-                }
-
                 auto const maxIt{std::max_element(output.begin(), output.end())};
-                auto predictedLabel{static_cast<uint8_t>(std::distance(output.begin(), maxIt))};
+                auto const predictedLabel{static_cast<uint8_t>(std::distance(output.begin(), maxIt))};
 
                 if (predictedLabel == testLabels[i]) {
                     ++correctCount;

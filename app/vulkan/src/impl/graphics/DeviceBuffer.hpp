@@ -33,6 +33,11 @@ public:
                   size_t offset = 0  //
                   ) -> HostVisibleBuffer;
 
+    auto copyData(VkCommandBuffer commandBuffer,  //
+                  HostVisibleBuffer const& stagingBuffer,  //
+                  size_t offset = 0  //
+                  ) noexcept -> void;
+
     auto destroy() noexcept -> void;
     auto getSize() const noexcept -> size_t;
     auto getBuffer() const noexcept -> VkBuffer;

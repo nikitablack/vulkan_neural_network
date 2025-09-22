@@ -26,10 +26,10 @@ public:
                   common::LCG<float>& lcg  //
     );
 
-    auto forward(graphics::GraphicsManager& graphicsManager,  //
-                 std::vector<float> const& inputValues,  //
-                 std::vector<float>* outputValues = nullptr  //
-                 ) -> void;
+    auto infer(graphics::GraphicsManager& graphicsManager,  //
+               std::vector<float> const& inputValues,  //
+               std::vector<float>& outputValues  //
+               ) -> void;
 
     auto train(graphics::GraphicsManager& graphicsManager,  //
                std::vector<std::vector<float>> const& input,  //
@@ -38,18 +38,29 @@ public:
                float learningRate  //
                ) -> void;
 
-    auto clear() noexcept -> void;
+    auto clear(graphics::GraphicsManager const& graphicsManager) noexcept -> void;
 
 private:
+    auto forward(graphics::GraphicsManager& graphicsManager,  //
+                 VkCommandBuffer commandBuffer,  //
+                 uint32_t dataIndex,  //
+                 uint32_t iterationIndex  //
+                 ) -> void;
+
     auto backward(graphics::GraphicsManager& graphicsManager,  //
-                  std::vector<float> const& expectedOutput,  //
-                  float learningRate  //
+                  VkCommandBuffer commandBuffer,  //
+                  uint32_t dataIndex,  //
+                  float learningRate,  //
+                  uint32_t iterationIndex  //
                   ) -> void;
 
 public:
     std::vector<Layer> layers;
-    graphics::DeviceBuffer m_output{};
-    graphics::HostVisibleBuffer m_expectedOutput{};
+    graphics::DeviceBuffer m_expectedOutput{};
+    uint32_t m_currIteration{0};
+    std::array<VkFence, graphics::CONCURRENT_ITERATIONS_COUNT> m_fences{};
+    std::array<VkDescriptorSet, graphics::CONCURRENT_ITERATIONS_COUNT> m_outputDeltaDescriptorSets{};
+    std::array<std::vector<VkDescriptorSet>, graphics::CONCURRENT_ITERATIONS_COUNT> m_hiddenDeltaDescriptorSets{};
 };
 
 }  // namespace impl

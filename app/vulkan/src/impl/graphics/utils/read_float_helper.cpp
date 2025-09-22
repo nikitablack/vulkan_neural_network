@@ -41,7 +41,7 @@ auto read_float_helper(GraphicsManager& graphicsManager,  //
         throw std::runtime_error{"Failed to end copy command buffer."};
     }
 
-    submit(commandBuffer, graphicsManager.computeQueue.queue);
+    submit(commandBuffer, graphicsManager.computeQueue.queue, VK_NULL_HANDLE);
 
     if (vkQueueWaitIdle(graphicsManager.computeQueue.queue) != VK_SUCCESS) {
         throw std::runtime_error{"Failed to wait staging queue."};

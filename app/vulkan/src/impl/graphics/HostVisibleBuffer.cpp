@@ -66,7 +66,9 @@ auto HostVisibleBuffer::copyData(std::vector<uint8_t> const& data, size_t offset
 }
 
 auto HostVisibleBuffer::copyData(uint8_t const* data, size_t size, size_t offset) noexcept -> void {
-    std::memcpy(reinterpret_cast<uint8_t*>(m_mappedData) + offset, data, size);
+    // std::memcpy(reinterpret_cast<uint8_t*>(m_mappedData) + offset, data, size);
+
+    vmaCopyMemoryToAllocation(m_allocator, data, m_allocation, offset, size);
 }
 
 auto HostVisibleBuffer::destroy() noexcept -> void {
