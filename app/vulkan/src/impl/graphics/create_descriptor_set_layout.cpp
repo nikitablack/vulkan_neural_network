@@ -5,13 +5,11 @@
 namespace impl {
 namespace graphics {
 
-auto create_descriptor_set_layout(VkDevice device,  //
-                                  VkDescriptorType descriptorType  //
-                                  ) -> VkDescriptorSetLayout {
-    std::array<VkDescriptorSetLayoutBinding, 4> bindings{};
+auto create_descriptor_set_layout(VkDevice device) -> VkDescriptorSetLayout {
+    std::array<VkDescriptorSetLayoutBinding, 5> bindings{};
     for (size_t i{0}; i < bindings.size(); i++) {
         bindings[i].binding = static_cast<uint32_t>(i);
-        bindings[i].descriptorType = descriptorType;
+        bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
         bindings[i].descriptorCount = 1;
         bindings[i].stageFlags = VK_SHADER_STAGE_COMPUTE_BIT;
         bindings[i].pImmutableSamplers = nullptr;

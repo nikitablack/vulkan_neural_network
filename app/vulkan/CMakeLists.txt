@@ -36,6 +36,8 @@ target_sources(vulkan_nn
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/CommandManager.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_allocator.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_allocator.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_batch_index_pipeline.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_batch_index_pipeline.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_delta_pipeline.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_delta_pipeline.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_descriptor_pool.cpp
@@ -75,6 +77,8 @@ target_sources(vulkan_nn
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/RequiredInstanceExtensions.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/submit.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/submit.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/update_current_batch_index.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/update_current_batch_index.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/VulkanDebugUtils.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/VulkanDebugUtils.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/VulkanFunctions.cpp
@@ -161,8 +165,9 @@ endfunction()
 addCompileShadersCommand(TARGET_NAME compile_shaders
     OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/shaders
     SHADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/delta.comp
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/batch_index.comp
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/forward.comp
+    ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/delta.comp
     ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/update.comp
 )
 

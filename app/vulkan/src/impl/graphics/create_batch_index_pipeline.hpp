@@ -5,7 +5,7 @@
 namespace impl {
 namespace graphics {
 
-auto create_descriptor_set_layout(VkDevice device) -> VkDescriptorSetLayout;
+auto create_batch_index_pipeline(VkDevice device, VkPipelineLayout pipelineLayout) -> VkPipeline;
 
 }  // namespace graphics
 }  // namespace impl

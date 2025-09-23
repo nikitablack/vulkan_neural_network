@@ -100,17 +100,20 @@ auto Layer::activate(graphics::GraphicsManager const& graphicsManager,  //
                      VkCommandBuffer commandBuffer,  //
                      Layer const& prevLayer,  //
                      uint32_t iterationIndex,  //
-                     uint32_t inputDataIndex  //
+                     graphics::DeviceBuffer const& batchIndex,  //
+                     bool infer  //
                      ) -> void {
     if (inputSize() != prevLayer.size()) {
         throw std::runtime_error{"Mismatch between layers sizes."};
     }
 
+    // the very first layer - input - comes in batches
+    bool const batchedInput{prevLayer.inputSize() == 0};
+
     // see forward.comp
-    auto const pushConstData{
-        graphics::utils::get_push_constant_data(static_cast<uint32_t>(size()),  //
-                                                static_cast<uint32_t>(inputSize()),  //
-                                                static_cast<uint32_t>(inputDataIndex * inputSize()))};
+    auto const pushConstData{graphics::utils::get_push_constant_data(static_cast<uint32_t>(size()),  //
+                                                                     static_cast<uint32_t>(inputSize()),  //
+                                                                     batchedInput ? uint32_t{1} : uint32_t{0})};
 
     vkCmdPushConstants(commandBuffer,  //
                        graphicsManager.pipelineLayout,  //
@@ -121,7 +124,7 @@ auto Layer::activate(graphics::GraphicsManager const& graphicsManager,  //
 
     auto const currDescriptorSet{m_activateDescriptorSets[iterationIndex]};
 
-    if (!m_descSetToUpdated[currDescriptorSet]) {
+    if (!m_descSetToUpdated[currDescriptorSet] || infer) {
         m_descSetToUpdated[currDescriptorSet] = true;
 
         graphics::utils::BufferUpdateInfo const weightsBufferUpdateInfo{weights.getBuffer(),  //
@@ -136,13 +139,17 @@ auto Layer::activate(graphics::GraphicsManager const& graphicsManager,  //
         graphics::utils::BufferUpdateInfo const valuesBufferUpdateInfo{values.getBuffer(),  //
                                                                        values.getSize(),  //
                                                                        0};
+        graphics::utils::BufferUpdateInfo const batchIndexBufferUpdateInfo{batchIndex.getBuffer(),  //
+                                                                           batchIndex.getSize(),  //
+                                                                           0};
 
         graphics::utils::update_descriptor_set(graphicsManager.device,  //
                                                currDescriptorSet,  //
                                                weightsBufferUpdateInfo,  //
                                                biasesBufferUpdateInfo,  //
                                                inputValuesBufferUpdateInfo,  //
-                                               valuesBufferUpdateInfo);
+                                               valuesBufferUpdateInfo,  //
+                                               batchIndexBufferUpdateInfo);
     }
 
     vkCmdBindDescriptorSets(commandBuffer,  //
@@ -190,18 +197,20 @@ auto Layer::update(graphics::GraphicsManager const& graphicsManager,  //
                    Layer const& prevLayer,  //
                    float learningRate,  //
                    uint32_t iterationIndex,  //
-                   uint32_t inputDataIndex  //
+                   graphics::DeviceBuffer const& batchIndex  //
                    ) -> void {
     if (delta.getSize() != size() * sizeof(float)) {
         throw std::runtime_error{"Mismatch between neuron count and delta count."};
     }
 
+    // the very first layer - input - comes in batches
+    bool const batchedInput{prevLayer.inputSize() == 0};
+
     // see forward.comp
-    auto const pushConstData{
-        graphics::utils::get_push_constant_data(static_cast<uint32_t>(size()),  //
-                                                static_cast<uint32_t>(inputSize()),  //
-                                                static_cast<uint32_t>(inputDataIndex * inputSize()),  //
-                                                learningRate)};
+    auto const pushConstData{graphics::utils::get_push_constant_data(static_cast<uint32_t>(size()),  //
+                                                                     static_cast<uint32_t>(inputSize()),  //
+                                                                     learningRate,  //
+                                                                     batchedInput ? uint32_t{1} : uint32_t{0})};
 
     vkCmdPushConstants(commandBuffer,  //
                        graphicsManager.pipelineLayout,  //
@@ -227,13 +236,17 @@ auto Layer::update(graphics::GraphicsManager const& graphicsManager,  //
         graphics::utils::BufferUpdateInfo const deltaBufferUpdateInfo{delta.getBuffer(),  //
                                                                       delta.getSize(),  //
                                                                       0};
+        graphics::utils::BufferUpdateInfo const batchIndexBufferUpdateInfo{batchIndex.getBuffer(),  //
+                                                                           batchIndex.getSize(),  //
+                                                                           0};
 
         graphics::utils::update_descriptor_set(graphicsManager.device,  //
                                                currDescriptorSet,  //
                                                weightsBufferUpdateInfo,  //
                                                biasesBufferUpdateInfo,  //
                                                inputValuesBufferUpdateInfo,  //
-                                               deltaBufferUpdateInfo);
+                                               deltaBufferUpdateInfo,  //
+                                               batchIndexBufferUpdateInfo);
     }
 
     vkCmdBindDescriptorSets(commandBuffer,  //

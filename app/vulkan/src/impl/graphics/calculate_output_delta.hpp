@@ -21,8 +21,7 @@ auto calculate_output_delta(GraphicsManager& graphicsManager,  //
                             DeviceBuffer const& values,  //
                             DeviceBuffer const& expectedOutput,  //
                             DeviceBuffer const& delta,  //
-                            uint32_t expectedOutputSize,  //
-                            uint32_t expectedOutputDataIndex  //
+                            DeviceBuffer const& batchIndex  //
                             ) -> void;
 
 }  // namespace graphics

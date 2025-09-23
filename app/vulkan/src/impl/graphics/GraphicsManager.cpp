@@ -9,6 +9,7 @@
 #include <impl/graphics/check_instance_version.hpp>
 #include <impl/graphics/check_required_instance_extensions.hpp>
 #include <impl/graphics/create_allocator.hpp>
+#include <impl/graphics/create_batch_index_pipeline.hpp>
 #include <impl/graphics/create_delta_pipeline.hpp>
 #include <impl/graphics/create_descriptor_pool.hpp>
 #include <impl/graphics/create_descriptor_set_layout.hpp>
@@ -83,7 +84,7 @@ auto GraphicsManager::changePhysicalDevice() -> void {
 
     commandManager.init(device, computeQueueFamily);
 
-    descriptorSetLayout = create_descriptor_set_layout(device, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+    descriptorSetLayout = create_descriptor_set_layout(device);
     debugUtils.setName(descriptorSetLayout, "Storage descriptor set layout.");
 
     pipelineLayout = create_pipeline_layout(device, descriptorSetLayout);
@@ -92,11 +93,14 @@ auto GraphicsManager::changePhysicalDevice() -> void {
     descriptorPool = create_descriptor_pool(device);
     debugUtils.setName(descriptorPool, "Descriptor pool.");
 
-    deltaPipeline = create_delta_pipeline(device, pipelineLayout);
-    debugUtils.setName(deltaPipeline, "Delta pipeline.");
+    batchIndexPipeline = create_batch_index_pipeline(device, pipelineLayout);
+    debugUtils.setName(batchIndexPipeline, "Batch index pipeline.");
 
     forwardPipeline = create_forward_pipeline(device, pipelineLayout);
     debugUtils.setName(forwardPipeline, "Forward pipeline.");
+
+    deltaPipeline = create_delta_pipeline(device, pipelineLayout);
+    debugUtils.setName(deltaPipeline, "Delta pipeline.");
 
     updatePipeline = create_update_pipeline(device, pipelineLayout);
     debugUtils.setName(updatePipeline, "Update pipeline.");
@@ -112,11 +116,14 @@ auto GraphicsManager::clear() noexcept -> void {
     vkDestroyPipeline(device, updatePipeline, nullptr);
     updatePipeline = VK_NULL_HANDLE;
 
+    vkDestroyPipeline(device, deltaPipeline, nullptr);
+    deltaPipeline = VK_NULL_HANDLE;
+
     vkDestroyPipeline(device, forwardPipeline, nullptr);
     forwardPipeline = VK_NULL_HANDLE;
 
-    vkDestroyPipeline(device, deltaPipeline, nullptr);
-    deltaPipeline = VK_NULL_HANDLE;
+    vkDestroyPipeline(device, batchIndexPipeline, nullptr);
+    batchIndexPipeline = VK_NULL_HANDLE;
 
     vkDestroyDescriptorPool(device, descriptorPool, nullptr);
     descriptorPool = VK_NULL_HANDLE;

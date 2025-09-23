@@ -23,14 +23,12 @@ auto calculate_output_delta(GraphicsManager& graphicsManager,  //
                             DeviceBuffer const& values,  //
                             DeviceBuffer const& expectedOutput,  //
                             DeviceBuffer const& delta,  //
-                            uint32_t expectedOutputSize,  //
-                            uint32_t expectedOutputDataIndex  //
+                            DeviceBuffer const& batchIndex  //
                             ) -> void {
     // see delta.comp
     auto const pushConstData{utils::get_push_constant_data(neuronCount,  //
                                                            uint32_t{0},  // not used for for this dispatch
-                                                           uint32_t{1},  //
-                                                           expectedOutputDataIndex * expectedOutputSize)};
+                                                           uint32_t{1})};
 
     vkCmdPushConstants(commandBuffer,  //
                        graphicsManager.pipelineLayout,  //
@@ -51,6 +49,9 @@ auto calculate_output_delta(GraphicsManager& graphicsManager,  //
         graphics::utils::BufferUpdateInfo const deltaBufferUpdateInfo{delta.getBuffer(),  //
                                                                       delta.getSize(),  //
                                                                       0};
+        graphics::utils::BufferUpdateInfo const batchIndexBufferUpdateInfo{batchIndex.getBuffer(),  //
+                                                                           batchIndex.getSize(),  //
+                                                                           0};
 
         // see delta.comp
         utils::update_descriptor_set(graphicsManager.device,  //
@@ -58,7 +59,8 @@ auto calculate_output_delta(GraphicsManager& graphicsManager,  //
                                      valuesBufferUpdateInfo,  // not used for for this dispatch
                                      valuesBufferUpdateInfo,  //
                                      expectedOutputBufferUpdateInfo,  //
-                                     deltaBufferUpdateInfo);
+                                     deltaBufferUpdateInfo,  //
+                                     batchIndexBufferUpdateInfo);
     }
 
     vkCmdBindDescriptorSets(commandBuffer,  //
@@ -80,7 +82,7 @@ auto calculate_output_delta(GraphicsManager& graphicsManager,  //
                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,  //
                               VK_ACCESS_SHADER_READ_BIT);
 
-    uint32_t constexpr GROUP_SIZE{64};  // see delta.comp
+    uint32_t constexpr GROUP_SIZE{32};  // see delta.comp
     uint32_t const groupCount{(neuronCount + GROUP_SIZE - 1) / GROUP_SIZE};
     vkCmdDispatch(commandBuffer, groupCount, 1, 1);
 }

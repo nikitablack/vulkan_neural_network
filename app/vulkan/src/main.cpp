@@ -33,7 +33,7 @@ auto main(int /* argc */, char* /* argv */[]) -> int {
     double totalTrainTimeMs{0.0};
 
     for (size_t t{0}; t < TRAIN_COUNT; ++t) {
-        impl::NeuralNetwork nn{graphicsManager, {784, 100, 10}, lcg};
+        impl::NeuralNetwork nn{graphicsManager, {784, 1000, 1000, 10}, lcg};
 
         size_t constexpr EPOCH_COUNT{20};
         float constexpr LEARNING_RATE{1.0f};

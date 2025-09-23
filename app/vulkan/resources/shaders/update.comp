@@ -13,11 +13,10 @@ layout(push_constant) uniform PushConst
 {
     uint neuronCount;
     uint neighbourLayerNeuronCount;
-    uint neighbourOffset;
     float learningRate;
+    uint batchedInput; // 0 - no, 1 - yes
 } pushConstants;
 
-// in
 layout (set = 0, binding = 0) buffer Weights {
     float weights[]; // neuronCount x neighbourLayerNeuronCount, row-major
 };
@@ -32,9 +31,12 @@ layout(set = 0, binding = 2) readonly buffer NeighbourLayerValues
     float neighbourLayerValues[]; // 1 x neighbourLayerNeuronCount
 };
 
-// out
 layout (set = 0, binding = 3) readonly buffer Delta {
     float delta[]; // neuronCount x 1
+};
+
+layout (set = 0, binding = 4) readonly buffer BatchIndex {
+    uint currBatchIndex[]; // 0 - atomic counter, 1 - current index, see batch_index.comp
 };
 
 const uint TILE_SIZE = 16;
@@ -59,7 +61,8 @@ void main() {
     }
 
     if (localRow == 0 && globalCol < totalCols) {
-        tileCacheB[localCol] = neighbourLayerValues[pushConstants.neighbourOffset + globalCol];
+        const uint inputOffset = currBatchIndex[1] * pushConstants.neighbourLayerNeuronCount * pushConstants.batchedInput;
+        tileCacheB[localCol] = neighbourLayerValues[inputOffset + globalCol];
     }
 
     barrier();

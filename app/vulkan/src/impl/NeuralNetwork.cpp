@@ -9,6 +9,7 @@
 #include <impl/graphics/calculate_hidden_delta.hpp>
 #include <impl/graphics/calculate_output_delta.hpp>
 #include <impl/graphics/submit.hpp>
+#include <impl/graphics/update_current_batch_index.hpp>
 #include <impl/graphics/utils/init_helper.hpp>
 #include <impl/graphics/utils/read_float_helper.hpp>
 #include <random>
@@ -16,10 +17,9 @@
 
 namespace {
 
-auto shuffle_indices(std::vector<size_t>& indices) noexcept -> void {
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::shuffle(indices.begin(), indices.end(), g);
+auto shuffle_indices(std::vector<uint32_t>& indices) noexcept -> void {
+    std::mt19937 engine{100};
+    std::shuffle(indices.begin(), indices.end(), engine);
 }
 
 }  // namespace
@@ -55,7 +55,17 @@ NeuralNetwork::NeuralNetwork(graphics::GraphicsManager& graphicsManager,  //
         graphicsManager.debugUtils.setName(m_fences[i], fmt::format("NeuralNetwork fence {}.", i));
     }
 
+    for (size_t i{0}; i < m_batchIndexDescriptorSets.size(); ++i) {
+        // can throw
+        m_batchIndexDescriptorSets[i] = graphics::allocate_descriptor_set(graphicsManager.device,  //
+                                                                          graphicsManager.descriptorPool,  //
+                                                                          graphicsManager.descriptorSetLayout);
+        graphicsManager.debugUtils.setName(m_batchIndexDescriptorSets[i],
+                                           fmt::format("Batch index descriptor set {}.", i));
+    }
+
     for (size_t i{0}; i < m_outputDeltaDescriptorSets.size(); ++i) {
+        // can throw
         m_outputDeltaDescriptorSets[i] = graphics::allocate_descriptor_set(graphicsManager.device,  //
                                                                            graphicsManager.descriptorPool,  //
                                                                            graphicsManager.descriptorSetLayout);
@@ -68,11 +78,37 @@ NeuralNetwork::NeuralNetwork(graphics::GraphicsManager& graphicsManager,  //
         v.resize(layerSizes.size());
 
         for (size_t j{0}; j < v.size(); ++j) {
+            // can throw
             v[j] = graphics::allocate_descriptor_set(graphicsManager.device,  //
                                                      graphicsManager.descriptorPool,  //
                                                      graphicsManager.descriptorSetLayout);
             graphicsManager.debugUtils.setName(v[j], fmt::format("Hidden delta descriptor set {}:{}.", i, j));
         }
+    }
+
+    // can throw
+    // see batch_index.comp
+    m_currBatchIndex.init(graphicsManager.allocator,  //
+                          VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,  //
+                          2 * sizeof(uint32_t));
+    graphicsManager.debugUtils.setName(m_currBatchIndex.getBuffer(), "Current batch index.");
+
+    // zero batch index
+    {
+        m_zeroBatchIndex.init(graphicsManager.allocator,  //
+                              VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,  //
+                              2 * sizeof(uint32_t));
+        graphicsManager.debugUtils.setName(m_zeroBatchIndex.getBuffer(), "Zero batch index.");
+
+        uint32_t resetData[]{0, 0};
+
+        graphics::utils::init_buffer_sync(graphicsManager.commandManager,  //
+                                          m_zeroBatchIndex,  //
+                                          reinterpret_cast<uint8_t const*>(resetData),
+                                          2 * sizeof(uint32_t),  //
+                                          VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,  //
+                                          VK_ACCESS_SHADER_READ_BIT,  //
+                                          graphicsManager.computeQueue);
     }
 }
 
@@ -99,7 +135,7 @@ auto NeuralNetwork::infer(graphics::GraphicsManager& graphicsManager,  //
 
     auto const commandBuffer{graphicsManager.commandManager.getCommandBufferBegin()};
 
-    forward(graphicsManager, commandBuffer, 0, 0);
+    forward(graphicsManager, commandBuffer, 0, m_zeroBatchIndex, true);
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
         throw std::runtime_error{"Failed to end copy command buffer."};
@@ -232,111 +268,119 @@ auto NeuralNetwork::train(graphics::GraphicsManager& graphicsManager,  //
                                           graphicsManager.computeQueue);
     }
 
-    std::vector<size_t> indices(input.size());  // Indices for shuffling
+    std::vector<uint32_t> indices(input.size());  // Indices for shuffling
     std::iota(indices.begin(), indices.end(), 0);
+
+    if (!m_batchIndices.getBuffer()) {
+        m_batchIndices.init(graphicsManager.allocator,  //
+                            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,  //
+                            indices.size() * sizeof(uint32_t));
+
+        graphicsManager.debugUtils.setName(m_batchIndices.getBuffer(), "Batch indices.");
+    }
+
+    uint32_t constexpr CB_COUNT{1};
+    std::vector<VkCommandBuffer> commandBuffers(CB_COUNT);
+
+    VkCommandBufferAllocateInfo cbAllocInfo{};
+    cbAllocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    cbAllocInfo.pNext = nullptr;
+    cbAllocInfo.commandPool = graphicsManager.commandManager.m_commandPool;
+    cbAllocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    cbAllocInfo.commandBufferCount = commandBuffers.size();
+
+    if (vkAllocateCommandBuffers(graphicsManager.device, &cbAllocInfo, commandBuffers.data()) != VK_SUCCESS) {
+        throw std::runtime_error{"Failed to allocate command buffers."};
+    }
+
+    size_t const batchSize{indices.size()};
+    size_t const partSize{(batchSize + CB_COUNT - 1) / CB_COUNT};
+
+    for (size_t i{0}; i < commandBuffers.size(); ++i) {
+        auto const cb{commandBuffers[i]};
+
+        VkCommandBufferBeginInfo cbBeginInfo{};
+        cbBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        cbBeginInfo.pNext = nullptr;
+        cbBeginInfo.flags = 0;
+        cbBeginInfo.pInheritanceInfo = nullptr;
+
+        if (vkBeginCommandBuffer(cb, &cbBeginInfo) != VK_SUCCESS) {
+            throw std::runtime_error{"Failed to begin command buffer."};
+        }
+
+        graphics::update_current_batch_index(graphicsManager,  //
+                                             cb,  //
+                                             m_batchIndexDescriptorSets[0],  //
+                                             m_currBatchIndex,  //
+                                             m_batchIndices);
+
+        // TODO: handle remainder
+        for (size_t j{0}; j < partSize; ++j) {
+            graphics::update_current_batch_index(graphicsManager,  //
+                                                 cb,  //
+                                                 m_batchIndexDescriptorSets[0],  //
+                                                 m_currBatchIndex,  //
+                                                 m_batchIndices);
+
+            // can throw
+            forward(graphicsManager, cb, 0, m_currBatchIndex);
+
+            // can throw
+            backward(graphicsManager, cb, learningRate, 0, m_currBatchIndex);
+        }
+
+        if (vkEndCommandBuffer(cb) != VK_SUCCESS) {
+            throw std::runtime_error{"Failed to end copy command buffer."};
+        }
+    }
 
     common::Timer totalTimer{};
 
     totalTimer.start();
 
     for (size_t epoch{0}; epoch < epochCount; ++epoch) {
-        // float epochLoss{0.0};
+        fmt::println("epoch {}", epoch);
 
-        fmt::println("epoch {} {}", epoch, indices.size());
-
-        std::array<VkCommandBuffer, graphics::CONCURRENT_ITERATIONS_COUNT> commandBuffers{};
-
+        // upload shuffled indices to GPU
         {
-            VkCommandBufferAllocateInfo info{};
-            info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-            info.pNext = nullptr;
-            info.commandPool = graphicsManager.commandManager.m_commandPool;
-            info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-            info.commandBufferCount = commandBuffers.size();
-
-            if (vkAllocateCommandBuffers(graphicsManager.device, &info, commandBuffers.data()) != VK_SUCCESS) {
-                throw std::runtime_error{"Failed to allocate command buffers."};
-            }
+            // can throw
+            graphics::utils::init_buffer_sync(graphicsManager.commandManager,  //
+                                              m_batchIndices,  //
+                                              reinterpret_cast<uint8_t const*>(indices.data()),
+                                              indices.size() * sizeof(uint32_t),  //
+                                              VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,  //
+                                              VK_ACCESS_SHADER_READ_BIT,  //
+                                              graphicsManager.computeQueue);
         }
 
-        for (size_t i{0}; i < indices.size(); ++i) {
-            auto const currFence{m_fences[m_currIteration]};
+        // reset batch index
+        {
+            uint32_t resetData[]{0, 0};
 
-            common::Timer t1{};
-            t1.start();
-            if (vkWaitForFences(graphicsManager.device, 1, &currFence, VK_TRUE, std::numeric_limits<uint64_t>::max()) !=
-                VK_SUCCESS) {
-                throw std::runtime_error{fmt::format("Failed to wait for NeuralNetwork fence {}.", m_currIteration)};
-            }
-
-            if (vkResetFences(graphicsManager.device, 1, &currFence) != VK_SUCCESS) {
-                throw std::runtime_error{fmt::format("Failed to reset NeuralNetwork fence {}.", m_currIteration)};
-            }
-            static uint32_t counter{0};
-            static double d1{0.0};
-            d1 += t1.stop();
-
-            auto const commandBuffer{commandBuffers[m_currIteration]};
-
-            VkCommandBufferBeginInfo info{};
-            info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            info.pNext = nullptr;
-            info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-            info.pInheritanceInfo = nullptr;
-
-            if (vkBeginCommandBuffer(commandBuffers[m_currIteration], &info) != VK_SUCCESS) {
-                throw std::runtime_error{"Failed to begin command buffer."};
-            }
-
-            auto const idx{indices[i]};
-
-            // can throw
-            common::Timer t2{};
-            t2.start();
-            forward(graphicsManager, commandBuffer, idx, m_currIteration);
-            static double d2{0.0};
-            d2 += t2.stop();
-
-            // can throw
-            common::Timer t3{};
-            t3.start();
-            backward(graphicsManager, commandBuffer, idx, learningRate, m_currIteration);
-            static double d3{0.0};
-            d3 += t3.stop();
-
-            common::Timer t4{};
-            t4.start();
-            if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-                throw std::runtime_error{"Failed to end copy command buffer."};
-            }
-
-            graphics::submit(commandBuffer, graphicsManager.computeQueue.queue, currFence);
-
-            m_currIteration = (m_currIteration + 1) % graphics::CONCURRENT_ITERATIONS_COUNT;
-
-            static double d4{0.0};
-            d4 += t4.stop();
-
-            ++counter;
-            // fmt::println("fence {:.5f}, forward {:.5f}, backward {:.5f}, submit {:.5f}", d1 / counter, d2 / counter,
-            //              d3 / counter, d4 / counter);
+            graphics::utils::init_buffer_sync(graphicsManager.commandManager,  //
+                                              m_currBatchIndex,  //
+                                              reinterpret_cast<uint8_t const*>(resetData),
+                                              2 * sizeof(uint32_t),  //
+                                              VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,  //
+                                              VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT,  //
+                                              graphicsManager.computeQueue);
         }
 
-        // vkQueueWaitIdle(graphicsManager.computeQueue.queue);
-        // std::vector<float> test(layers[2].size());
-        // graphics::utils::read_float_helper(graphicsManager,  //
-        //                                    layers[2].values,
-        //                                    VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,  //
-        //                                    VK_ACCESS_SHADER_WRITE_BIT,  //
-        //                                    test);
-        // fmt::println("target {}", target[indices[99]]);
-        // fmt::println("{}", test);
+        common::Timer t1{};
+        t1.start();
+        for (size_t i{0}; i < commandBuffers.size(); ++i) {
+            auto const cb{commandBuffers[i]};
+
+            // can throw
+            graphics::submit(cb, graphicsManager.computeQueue.queue, VK_NULL_HANDLE);
+        }
+
+        if (vkQueueWaitIdle(graphicsManager.computeQueue.queue) != VK_SUCCESS) {
+            throw std::runtime_error{"Failed to wait queue on train."};
+        }
 
         shuffle_indices(indices);
-
-        // float const averageLoss{epochLoss / input.size()};
-        // fmt::println("Epoch {}:\n\taverage loss: {}\n\tepoch time: {:.2f} ms", epoch, averageLoss,
-        // epochTimer.stop());
     }
 
     auto const totalTimeMs{totalTimer.stop()};
@@ -346,29 +390,23 @@ auto NeuralNetwork::train(graphics::GraphicsManager& graphicsManager,  //
 
 auto NeuralNetwork::forward(graphics::GraphicsManager& graphicsManager,  //
                             VkCommandBuffer commandBuffer,  //
-                            uint32_t dataIndex,  //
-                            uint32_t iterationIndex  //
+                            uint32_t iterationIndex,  //
+                            graphics::DeviceBuffer const& batchIndexBuffer,  //
+                            bool infer  //
                             ) -> void {
-    common::Timer t2{};
-    t2.start();
     for (size_t i{1}; i < layers.size(); ++i) {
         auto& currLayer{layers[i]};
         auto& prevLayer{layers[i - 1]};
 
-        uint32_t const inputDataIndex{(i == 1) ? dataIndex : 0};
-
-        currLayer.activate(graphicsManager, commandBuffer, prevLayer, iterationIndex, inputDataIndex);
-    }
-    if (auto const t{t2.stop()}; t > 3.0) {
-        fmt::println("forward 2 {:.2f} ms", t);
+        currLayer.activate(graphicsManager, commandBuffer, prevLayer, iterationIndex, batchIndexBuffer, infer);
     }
 }
 
 auto NeuralNetwork::backward(graphics::GraphicsManager& graphicsManager,  //
                              VkCommandBuffer commandBuffer,  //
-                             uint32_t dataIndex,  //
                              float learningRate,  //
-                             uint32_t iterationIndex  //
+                             uint32_t iterationIndex,  //
+                             graphics::DeviceBuffer const& batchIndexBuffer  //
                              ) -> void {
     auto& outputLayer{layers.back()};
 
@@ -382,8 +420,7 @@ auto NeuralNetwork::backward(graphics::GraphicsManager& graphicsManager,  //
                                          outputLayer.values,  //
                                          m_expectedOutput,  //
                                          outputLayer.delta,  //
-                                         outputLayer.size(),  //
-                                         dataIndex);
+                                         batchIndexBuffer);
 
         auto const& dSets{m_hiddenDeltaDescriptorSets[iterationIndex]};
 
@@ -410,10 +447,8 @@ auto NeuralNetwork::backward(graphics::GraphicsManager& graphicsManager,  //
             auto& layer{layers[layerInd]};
             auto const& leftLayer{layers[layerInd - 1]};
 
-            uint32_t const inputDataIndex{(layerInd == 1) ? dataIndex : 0};
-
             // can throw
-            layer.update(graphicsManager, commandBuffer, leftLayer, learningRate, iterationIndex, inputDataIndex);
+            layer.update(graphicsManager, commandBuffer, leftLayer, learningRate, iterationIndex, batchIndexBuffer);
         }
     }
 }
@@ -423,12 +458,15 @@ auto NeuralNetwork::clear(graphics::GraphicsManager const& graphicsManager) noex
         layer.clear();
     }
 
-    m_expectedOutput.destroy();
-
     for (size_t i{0}; i < m_fences.size(); ++i) {
         vkDestroyFence(graphicsManager.device, m_fences[i], nullptr);
         m_fences[i] = VK_NULL_HANDLE;
     }
+
+    m_expectedOutput.destroy();
+    m_batchIndices.destroy();
+    m_currBatchIndex.destroy();
+    m_zeroBatchIndex.destroy();
 }
 
 }  // namespace impl

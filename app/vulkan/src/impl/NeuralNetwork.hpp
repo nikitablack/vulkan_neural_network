@@ -43,22 +43,27 @@ public:
 private:
     auto forward(graphics::GraphicsManager& graphicsManager,  //
                  VkCommandBuffer commandBuffer,  //
-                 uint32_t dataIndex,  //
-                 uint32_t iterationIndex  //
+                 uint32_t iterationIndex,  //
+                 graphics::DeviceBuffer const& batchIndexBuffer,  //
+                 bool infer = false  //
                  ) -> void;
 
     auto backward(graphics::GraphicsManager& graphicsManager,  //
                   VkCommandBuffer commandBuffer,  //
-                  uint32_t dataIndex,  //
                   float learningRate,  //
-                  uint32_t iterationIndex  //
+                  uint32_t iterationIndex,  //
+                  graphics::DeviceBuffer const& batchIndexBuffer  //
                   ) -> void;
 
 public:
     std::vector<Layer> layers;
     graphics::DeviceBuffer m_expectedOutput{};
+    graphics::DeviceBuffer m_batchIndices{};
+    graphics::DeviceBuffer m_currBatchIndex{};
+    graphics::DeviceBuffer m_zeroBatchIndex{};  // used for inference
     uint32_t m_currIteration{0};
     std::array<VkFence, graphics::CONCURRENT_ITERATIONS_COUNT> m_fences{};
+    std::array<VkDescriptorSet, graphics::CONCURRENT_ITERATIONS_COUNT> m_batchIndexDescriptorSets{};
     std::array<VkDescriptorSet, graphics::CONCURRENT_ITERATIONS_COUNT> m_outputDeltaDescriptorSets{};
     std::array<std::vector<VkDescriptorSet>, graphics::CONCURRENT_ITERATIONS_COUNT> m_hiddenDeltaDescriptorSets{};
 };

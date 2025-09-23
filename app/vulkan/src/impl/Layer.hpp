@@ -38,7 +38,8 @@ public:
                   VkCommandBuffer commandBuffer,  //
                   Layer const& prevLayer,  //
                   uint32_t iterationIndex,  //
-                  uint32_t inputDataIndex  //
+                  graphics::DeviceBuffer const& batchIndex,  //
+                  bool infer = false  //
                   ) -> void;
 
     auto update(graphics::GraphicsManager const& graphicsManager,  //
@@ -46,7 +47,7 @@ public:
                 Layer const& prevLayer,  //
                 float learningRate,  //
                 uint32_t iterationIndex,  //
-                uint32_t inputDataIndex  //
+                graphics::DeviceBuffer const& batchIndex  //
                 ) -> void;
 
     auto size() const noexcept -> size_t;

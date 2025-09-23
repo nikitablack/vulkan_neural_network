@@ -13,10 +13,9 @@ layout(push_constant) uniform PushConst
 {
     uint neuronCount;
     uint inputCount;
-    uint inputOffset;
+    uint batchedInput; // 0 - no, 1 - yes
 } pushConstants;
 
-// in
 layout (set = 0, binding = 0) readonly buffer Weights {
     float weights[]; // neuronCount x inputCount, row-major
 };
@@ -31,9 +30,12 @@ layout(set = 0, binding = 2) readonly buffer InputValues
     float inputValues[]; // inputCount x 1
 };
 
-// out
 layout (set = 0, binding = 3) writeonly buffer Values {
     float values[]; // neuronCount x 1
+};
+
+layout (set = 0, binding = 4) readonly buffer BatchIndex {
+    uint currBatchIndex[]; // 0 - atomic counter, 1 - current index, see batch_index.comp
 };
 
 const uint TILE_SIZE = 64;
@@ -58,7 +60,8 @@ void main() {
         uint index = tileStart + gl_LocalInvocationID.x;
 
         if (index < pushConstants.inputCount) {
-            tileCache[gl_LocalInvocationID.x] = inputValues[pushConstants.inputOffset + index];
+            const uint inputOffset = currBatchIndex[1] * pushConstants.inputCount * pushConstants.batchedInput;
+            tileCache[gl_LocalInvocationID.x] = inputValues[inputOffset + index];
         } else {
             tileCache[gl_LocalInvocationID.x] = 0.0;
         }

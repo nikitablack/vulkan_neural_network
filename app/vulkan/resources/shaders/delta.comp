@@ -9,7 +9,6 @@ layout(push_constant) uniform PushConst
     uint neuronCount;
     uint neighbourLayerNeuronCount; // used only by hidden layer
     uint outputLayer; // 1 - output layer, 0 - hidden layer
-    uint outputOffset;
 } pushConstants;
 
 layout (set = 0, binding = 0) readonly buffer NeighbourWeights {
@@ -39,6 +38,10 @@ layout (set = 0, binding = 3) writeonly buffer Delta {
     float delta[]; // neuronCount x 1
 };
 
+layout (set = 0, binding = 4) readonly buffer BatchIndex {
+    uint currBatchIndex[]; // 0 - atomic counter, 1 - current index, see batch_index.comp
+};
+
 float sigmoid_derivative(float sigmoidResult) {
     return sigmoidResult * (1.0f - sigmoidResult);
 }
@@ -59,8 +62,10 @@ void main() {
             return;
         }
 
+        const uint outputOffset = currBatchIndex[1] * pushConstants.neuronCount;
+
         const float val = values[row];
-        const float dCdA = 2.0f * (val - expectedOutput[pushConstants.outputOffset + row]) / pushConstants.neuronCount;
+        const float dCdA = 2.0f * (val - expectedOutput[outputOffset + row]) / pushConstants.neuronCount;
         const float dAdZ = sigmoid_derivative(val);
 
         delta[row] = dCdA * dAdZ;

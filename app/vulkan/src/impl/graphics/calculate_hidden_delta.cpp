@@ -60,7 +60,8 @@ auto calculate_hidden_delta(GraphicsManager& graphicsManager,  //
                                      neigbourWeightsBufferUpdateInfo,  //
                                      valuesBufferUpdateInfo,  //
                                      neighbourDeltaBufferUpdateInfo,  //
-                                     deltaBufferUpdateInfo);
+                                     deltaBufferUpdateInfo,  //
+                                     deltaBufferUpdateInfo);  // not used by this dispatch
     }
 
     vkCmdBindDescriptorSets(commandBuffer,  //
