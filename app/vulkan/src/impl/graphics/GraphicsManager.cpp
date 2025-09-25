@@ -10,6 +10,7 @@
 #include <impl/graphics/check_required_instance_extensions.hpp>
 #include <impl/graphics/create_allocator.hpp>
 #include <impl/graphics/create_batch_index_pipeline.hpp>
+#include <impl/graphics/create_command_pool.hpp>
 #include <impl/graphics/create_delta_pipeline.hpp>
 #include <impl/graphics/create_descriptor_pool.hpp>
 #include <impl/graphics/create_descriptor_set_layout.hpp>
@@ -82,7 +83,8 @@ auto GraphicsManager::changePhysicalDevice() -> void {
 
     allocator = create_allocator(instance, physicalDevice, device);
 
-    commandManager.init(device, computeQueueFamily);
+    commandPool = create_command_pool(device, computeQueue.queueFamily);
+    debugUtils.setName(commandPool, "Command pool.");
 
     descriptorSetLayout = create_descriptor_set_layout(device);
     debugUtils.setName(descriptorSetLayout, "Storage descriptor set layout.");
@@ -134,7 +136,8 @@ auto GraphicsManager::clear() noexcept -> void {
     vkDestroyDescriptorSetLayout(device, descriptorSetLayout, nullptr);
     descriptorSetLayout = VK_NULL_HANDLE;
 
-    commandManager.clear();
+    vkDestroyCommandPool(device, commandPool, nullptr);
+    commandPool = VK_NULL_HANDLE;
 
     vmaDestroyAllocator(allocator);
     allocator = VK_NULL_HANDLE;

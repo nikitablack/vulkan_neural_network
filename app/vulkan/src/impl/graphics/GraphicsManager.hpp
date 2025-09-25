@@ -37,7 +37,8 @@ public:
     VulkanDebugUtils debugUtils{};
     VulkanQueue computeQueue{};
     VmaAllocator allocator{VK_NULL_HANDLE};
-    CommandManager commandManager{};
+    // CommandManager commandManager{};
+    VkCommandPool commandPool{VK_NULL_HANDLE};
     VkDescriptorSetLayout descriptorSetLayout{VK_NULL_HANDLE};
     VkPipelineLayout pipelineLayout{VK_NULL_HANDLE};
     VkDescriptorPool descriptorPool{VK_NULL_HANDLE};

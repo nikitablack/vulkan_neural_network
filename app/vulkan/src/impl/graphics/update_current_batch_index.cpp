@@ -5,41 +5,14 @@
 #include <impl/graphics/utils/update_descriptor_set.hpp>
 #include <unordered_map>
 
-namespace {
-
-std::unordered_map<VkDescriptorSet, bool> m_descSetToUpdated{};
-
-}
-
 namespace impl {
 namespace graphics {
 
 auto update_current_batch_index(GraphicsManager& graphicsManager,  //
                                 VkCommandBuffer commandBuffer,  //
                                 VkDescriptorSet descriptorSet,  //
-                                DeviceBuffer const& currBatchIndex,  //
-                                DeviceBuffer const& batchIndices  //
+                                DeviceBuffer const& currBatchIndex  //
                                 ) -> void {
-    if (!m_descSetToUpdated[descriptorSet]) {
-        m_descSetToUpdated[descriptorSet] = true;
-
-        graphics::utils::BufferUpdateInfo const currBatchIndexBufferUpdateInfo{currBatchIndex.getBuffer(),  //
-                                                                               currBatchIndex.getSize(),  //
-                                                                               0};
-        graphics::utils::BufferUpdateInfo const batchIndicesBufferUpdateInfo{batchIndices.getBuffer(),  //
-                                                                             batchIndices.getSize(),  //
-                                                                             0};
-
-        // see batch_index.comp
-        utils::update_descriptor_set(graphicsManager.device,  //
-                                     descriptorSet,  //
-                                     currBatchIndexBufferUpdateInfo,  //
-                                     batchIndicesBufferUpdateInfo,  //
-                                     currBatchIndexBufferUpdateInfo,  // not used
-                                     currBatchIndexBufferUpdateInfo  // not used
-        );
-    }
-
     vkCmdBindDescriptorSets(commandBuffer,  //
                             VK_PIPELINE_BIND_POINT_COMPUTE,  //
                             graphicsManager.pipelineLayout,  //

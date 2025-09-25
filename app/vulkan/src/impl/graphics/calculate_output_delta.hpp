@@ -18,10 +18,7 @@ auto calculate_output_delta(GraphicsManager& graphicsManager,  //
                             VkCommandBuffer commandBuffer,  //
                             VkDescriptorSet descriptorSet,  //
                             uint32_t neuronCount,  //
-                            DeviceBuffer const& values,  //
-                            DeviceBuffer const& expectedOutput,  //
-                            DeviceBuffer const& delta,  //
-                            DeviceBuffer const& batchIndex  //
+                            DeviceBuffer const& values  //
                             ) -> void;
 
 }  // namespace graphics

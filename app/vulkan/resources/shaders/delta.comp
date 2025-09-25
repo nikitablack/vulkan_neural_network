@@ -1,6 +1,6 @@
 #version 450
 
-#extension GL_EXT_debug_printf : enable
+// #extension GL_EXT_debug_printf : enable
 
 layout (local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
 
@@ -97,10 +97,6 @@ void main() {
             if(inBounds) {
                 for (uint k = 0; k < tileSize; ++k) {
                     const uint index = (tileStart + k) * pushConstants.neuronCount + row;
-                    if(index >= 1000){
-                        debugPrintfEXT("%d %d %d %d %d %d %d\n", row, index, tileStart, k, pushConstants.neuronCount, pushConstants.neighbourLayerNeuronCount, tileSize);
-                    }
-                    
                     sum += neighbourWeights[(tileStart + k) * pushConstants.neuronCount + row] * tileCache[k];
                 }
             }

@@ -13,6 +13,7 @@ public:
     auto initialize(VkDevice device) noexcept -> void;
 
     auto setName(VkBuffer object, std::string const& name) const noexcept -> void;
+    auto setName(VkCommandPool object, std::string const& name) const noexcept -> void;
     auto setName(VkDescriptorPool object, std::string const& name) const noexcept -> void;
     auto setName(VkDescriptorSet object, std::string const& name) const noexcept -> void;
     auto setName(VkDescriptorSetLayout object, std::string const& name) const noexcept -> void;

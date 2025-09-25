@@ -17,8 +17,7 @@ namespace graphics {
 auto update_current_batch_index(GraphicsManager& graphicsManager,  //
                                 VkCommandBuffer commandBuffer,  //
                                 VkDescriptorSet descriptorSet,  //
-                                DeviceBuffer const& currBatchIndex,  //
-                                DeviceBuffer const& batchIndices  //
+                                DeviceBuffer const& currBatchIndex  //
                                 ) -> void;
 
 }  // namespace graphics

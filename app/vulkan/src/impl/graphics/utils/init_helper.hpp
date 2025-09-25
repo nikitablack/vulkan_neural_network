@@ -6,8 +6,8 @@
 // forward declarations
 namespace graphics {
 
-class CommandManager;
 class DeviceBuffer;
+class GraphicsManager;
 struct VulkanQueue;
 
 }  // namespace graphics
@@ -38,7 +38,7 @@ auto init_buffer(VkCommandBuffer commandBuffer,  //
                  VkAccessFlags dstAccessMask  //
                  ) noexcept -> void;
 
-auto init_buffer_sync(CommandManager& commandManager,  //
+auto init_buffer_sync(GraphicsManager& graphicsManager,  //
                       DeviceBuffer& deviceBuffer,  //
                       std::vector<uint8_t> const& data,  //
                       VkPipelineStageFlags dstStageMask,  //
@@ -46,7 +46,7 @@ auto init_buffer_sync(CommandManager& commandManager,  //
                       VulkanQueue const& queue  //
                       ) -> void;
 
-auto init_buffer_sync(CommandManager& commandManager,  //
+auto init_buffer_sync(GraphicsManager& graphicsManager,  //
                       DeviceBuffer& deviceBuffer,  //
                       uint8_t const* data,  //
                       size_t size,  //
@@ -56,7 +56,7 @@ auto init_buffer_sync(CommandManager& commandManager,  //
                       ) -> void;
 
 auto init_buffer_sync(
-    CommandManager& commandManager,  //
+    GraphicsManager& graphicsManager,  //
     DeviceBuffer& deviceBuffer,  //
     HostVisibleBuffer&& stagingBuffer,  // pass ownership to the function. The buffer will be destroyed.
     VkPipelineStageFlags dstStageMask,  //

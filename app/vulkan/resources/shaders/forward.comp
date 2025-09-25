@@ -1,7 +1,6 @@
 #version 450
 
-#extension GL_EXT_debug_printf : enable
-
+// #extension GL_EXT_debug_printf : enable
 
 // TODO: move to specialization constants
 // layout(local_size_x_id = 0) in;

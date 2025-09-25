@@ -32,12 +32,12 @@ target_sources(vulkan_nn
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/check_physical_device_support.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/check_required_instance_extensions.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/check_required_instance_extensions.hpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/CommandManager.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/CommandManager.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_allocator.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_allocator.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_batch_index_pipeline.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_batch_index_pipeline.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_command_pool.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_command_pool.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_delta_pipeline.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_delta_pipeline.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_descriptor_pool.cpp
@@ -58,6 +58,8 @@ target_sources(vulkan_nn
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/create_update_pipeline.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/DeviceBuffer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/DeviceBuffer.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/get_command_buffer.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/get_command_buffer.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/get_compute_queue_family.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/get_compute_queue_family.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/get_compute_queue.cpp
@@ -75,6 +77,8 @@ target_sources(vulkan_nn
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/RequiredDeviceExtensions.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/RequiredInstanceExtensions.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/RequiredInstanceExtensions.hpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/set_input_and_target_data.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/set_input_and_target_data.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/submit.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/submit.hpp
         ${CMAKE_CURRENT_SOURCE_DIR}/src/impl/graphics/update_current_batch_index.cpp

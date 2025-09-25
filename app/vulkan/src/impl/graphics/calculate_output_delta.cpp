@@ -7,12 +7,6 @@
 #include <impl/graphics/utils/update_descriptor_set.hpp>
 #include <unordered_map>
 
-namespace {
-
-std::unordered_map<VkDescriptorSet, bool> m_descSetToUpdated{};
-
-}
-
 namespace impl {
 namespace graphics {
 
@@ -20,10 +14,7 @@ auto calculate_output_delta(GraphicsManager& graphicsManager,  //
                             VkCommandBuffer commandBuffer,  //
                             VkDescriptorSet descriptorSet,  //
                             uint32_t neuronCount,  //
-                            DeviceBuffer const& values,  //
-                            DeviceBuffer const& expectedOutput,  //
-                            DeviceBuffer const& delta,  //
-                            DeviceBuffer const& batchIndex  //
+                            DeviceBuffer const& values  //
                             ) -> void {
     // see delta.comp
     auto const pushConstData{utils::get_push_constant_data(neuronCount,  //
@@ -36,32 +27,6 @@ auto calculate_output_delta(GraphicsManager& graphicsManager,  //
                        0,  //
                        static_cast<uint32_t>(pushConstData.size()),  //
                        pushConstData.data());
-
-    if (!m_descSetToUpdated[descriptorSet]) {
-        m_descSetToUpdated[descriptorSet] = true;
-
-        graphics::utils::BufferUpdateInfo const valuesBufferUpdateInfo{values.getBuffer(),  //
-                                                                       values.getSize(),  //
-                                                                       0};
-        graphics::utils::BufferUpdateInfo const expectedOutputBufferUpdateInfo{expectedOutput.getBuffer(),  //
-                                                                               expectedOutput.getSize(),  //
-                                                                               0};
-        graphics::utils::BufferUpdateInfo const deltaBufferUpdateInfo{delta.getBuffer(),  //
-                                                                      delta.getSize(),  //
-                                                                      0};
-        graphics::utils::BufferUpdateInfo const batchIndexBufferUpdateInfo{batchIndex.getBuffer(),  //
-                                                                           batchIndex.getSize(),  //
-                                                                           0};
-
-        // see delta.comp
-        utils::update_descriptor_set(graphicsManager.device,  //
-                                     descriptorSet,  //
-                                     valuesBufferUpdateInfo,  // not used for for this dispatch
-                                     valuesBufferUpdateInfo,  //
-                                     expectedOutputBufferUpdateInfo,  //
-                                     deltaBufferUpdateInfo,  //
-                                     batchIndexBufferUpdateInfo);
-    }
 
     vkCmdBindDescriptorSets(commandBuffer,  //
                             VK_PIPELINE_BIND_POINT_COMPUTE,  //

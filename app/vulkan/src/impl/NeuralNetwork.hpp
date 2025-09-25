@@ -38,12 +38,11 @@ public:
                float learningRate  //
                ) -> void;
 
-    auto clear(graphics::GraphicsManager const& graphicsManager) noexcept -> void;
+    auto clear() noexcept -> void;
 
 private:
     auto forward(graphics::GraphicsManager& graphicsManager,  //
                  VkCommandBuffer commandBuffer,  //
-                 uint32_t iterationIndex,  //
                  graphics::DeviceBuffer const& batchIndexBuffer,  //
                  bool infer = false  //
                  ) -> void;
@@ -51,21 +50,23 @@ private:
     auto backward(graphics::GraphicsManager& graphicsManager,  //
                   VkCommandBuffer commandBuffer,  //
                   float learningRate,  //
-                  uint32_t iterationIndex,  //
                   graphics::DeviceBuffer const& batchIndexBuffer  //
                   ) -> void;
 
-public:
+    auto createTrainCommandBuffer(impl::graphics::GraphicsManager& graphicsManager,  //
+                                  float learningRate  //
+                                  ) -> VkCommandBuffer;
+
+private:
     std::vector<Layer> layers;
     graphics::DeviceBuffer m_expectedOutput{};
     graphics::DeviceBuffer m_batchIndices{};
     graphics::DeviceBuffer m_currBatchIndex{};
     graphics::DeviceBuffer m_zeroBatchIndex{};  // used for inference
-    uint32_t m_currIteration{0};
-    std::array<VkFence, graphics::CONCURRENT_ITERATIONS_COUNT> m_fences{};
-    std::array<VkDescriptorSet, graphics::CONCURRENT_ITERATIONS_COUNT> m_batchIndexDescriptorSets{};
-    std::array<VkDescriptorSet, graphics::CONCURRENT_ITERATIONS_COUNT> m_outputDeltaDescriptorSets{};
-    std::array<std::vector<VkDescriptorSet>, graphics::CONCURRENT_ITERATIONS_COUNT> m_hiddenDeltaDescriptorSets{};
+    VkDescriptorSet m_batchIndexDescriptorSet{VK_NULL_HANDLE};
+    VkDescriptorSet m_outputDeltaDescriptorSet{VK_NULL_HANDLE};
+    std::vector<VkDescriptorSet> m_hiddenDeltaDescriptorSets{};
+    VkCommandBuffer m_trainCommandBuffer{VK_NULL_HANDLE};
 };
 
 }  // namespace impl

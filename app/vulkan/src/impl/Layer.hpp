@@ -37,7 +37,6 @@ public:
     auto activate(graphics::GraphicsManager const& graphicsManager,  //
                   VkCommandBuffer commandBuffer,  //
                   Layer const& prevLayer,  //
-                  uint32_t iterationIndex,  //
                   graphics::DeviceBuffer const& batchIndex,  //
                   bool infer = false  //
                   ) -> void;
@@ -46,14 +45,11 @@ public:
                 VkCommandBuffer commandBuffer,  //
                 Layer const& prevLayer,  //
                 float learningRate,  //
-                uint32_t iterationIndex,  //
                 graphics::DeviceBuffer const& batchIndex  //
                 ) -> void;
 
     auto size() const noexcept -> size_t;
-    auto sizeBytes() const noexcept -> size_t;
     auto inputSize() const noexcept -> size_t;
-    auto inputSizeBytes() const noexcept -> size_t;
     auto clear() noexcept -> void;
 
 public:
@@ -65,10 +61,16 @@ public:
 private:
     size_t m_size{};
     size_t m_inputSize{};
-    std::array<VkDescriptorSet, graphics::CONCURRENT_ITERATIONS_COUNT> m_activateDescriptorSets{};
-    std::array<VkDescriptorSet, graphics::CONCURRENT_ITERATIONS_COUNT> m_updateDescriptorSets{};
 
-    std::unordered_map<VkDescriptorSet, bool> m_descSetToUpdated{};
+    // graphics
+    VkDescriptorSet m_activateDescriptorSet{VK_NULL_HANDLE};
+    bool m_activateDescriptorSetUpdated{false};
+
+    VkDescriptorSet m_inferDescriptorSet{VK_NULL_HANDLE};
+    bool m_inferDescriptorSetUpdated{false};
+
+    VkDescriptorSet m_updateDescriptorSet{VK_NULL_HANDLE};
+    bool m_updateDescriptorSetUpdated{false};
 };
 
 }  // namespace impl

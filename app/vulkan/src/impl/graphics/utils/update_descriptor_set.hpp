@@ -9,12 +9,6 @@ namespace impl {
 namespace graphics {
 namespace utils {
 
-struct BufferUpdateInfo {
-    VkBuffer buffer;
-    VkDeviceSize range;
-    VkDeviceSize offset;
-};
-
 template <typename T, typename... Ts>
 constexpr auto make_array(T&& first, Ts&&... rest) noexcept {
     using U = std::decay_t<T>;
@@ -31,9 +25,9 @@ auto update_descriptor_set(VkDevice device, VkDescriptorSet descriptorSet, Args&
     std::array<VkDescriptorBufferInfo, arr.size()> infos{};
 
     for (size_t i{0}; i < arr.size(); ++i) {
-        infos[i].buffer = arr[i].buffer;
-        infos[i].offset = arr[i].offset;
-        infos[i].range = arr[i].range;
+        infos[i].buffer = arr[i].getBuffer();
+        infos[i].offset = 0;
+        infos[i].range = arr[i].getSize();
 
         writeDescriptorSets[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
         writeDescriptorSets[i].pNext = nullptr;

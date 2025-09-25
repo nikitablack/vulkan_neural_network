@@ -1,6 +1,7 @@
 #include <cstring>
 #include <impl/graphics/DeviceBuffer.hpp>
 #include <impl/graphics/GraphicsManager.hpp>
+#include <impl/graphics/get_command_buffer.hpp>
 #include <impl/graphics/submit.hpp>
 #include <impl/graphics/utils/barrier_helper.hpp>
 #include <impl/graphics/utils/read_float_helper.hpp>
@@ -16,7 +17,7 @@ auto read_float_helper(GraphicsManager& graphicsManager,  //
                        VkAccessFlags srcAccessMask,  //
                        std::vector<float>& out  //
                        ) -> void {
-    auto const commandBuffer{graphicsManager.commandManager.getCommandBufferBegin()};
+    auto const commandBuffer{get_command_buffer_begin(graphicsManager.device, graphicsManager.commandPool)};
 
     set_buffer_barrier(commandBuffer,  //
                        buffer,  //

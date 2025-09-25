@@ -12,6 +12,10 @@ auto VulkanDebugUtils::setName(VkBuffer object, std::string const& name) const n
     setName(VK_OBJECT_TYPE_BUFFER, reinterpret_cast<uint64_t>(object), name);
 }
 
+auto VulkanDebugUtils::setName(VkCommandPool object, std::string const& name) const noexcept -> void {
+    setName(VK_OBJECT_TYPE_COMMAND_POOL, reinterpret_cast<uint64_t>(object), name);
+}
+
 auto VulkanDebugUtils::setName(VkDescriptorSet object, std::string const& name) const noexcept -> void {
     setName(VK_OBJECT_TYPE_DESCRIPTOR_SET, reinterpret_cast<uint64_t>(object), name);
 }

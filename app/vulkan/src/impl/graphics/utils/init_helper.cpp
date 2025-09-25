@@ -1,6 +1,7 @@
-#include <impl/graphics/CommandManager.hpp>
 #include <impl/graphics/DeviceBuffer.hpp>
+#include <impl/graphics/GraphicsManager.hpp>
 #include <impl/graphics/VulkanQueue.hpp>
+#include <impl/graphics/get_command_buffer.hpp>
 #include <impl/graphics/utils/barrier_helper.hpp>
 #include <impl/graphics/utils/init_helper.hpp>
 #include <stdexcept>
@@ -72,14 +73,14 @@ auto init_buffer(VkCommandBuffer commandBuffer,  //
                        dstAccessMask);
 }
 
-auto init_buffer_sync(CommandManager& commandManager,  //
+auto init_buffer_sync(GraphicsManager& graphicsManager,  //
                       DeviceBuffer& deviceBuffer,  //
                       std::vector<uint8_t> const& data,  //
                       VkPipelineStageFlags dstStageMask,  //
                       VkAccessFlags dstAccessMask,  //
                       VulkanQueue const& queue  //
                       ) -> void {
-    return init_buffer_sync(commandManager,  //
+    return init_buffer_sync(graphicsManager,  //
                             deviceBuffer,  //
                             data.data(),  //
                             data.size(),  //
@@ -88,7 +89,7 @@ auto init_buffer_sync(CommandManager& commandManager,  //
                             queue);
 }
 
-auto init_buffer_sync(CommandManager& commandManager,  //
+auto init_buffer_sync(GraphicsManager& graphicsManager,  //
                       DeviceBuffer& deviceBuffer,  //
                       uint8_t const* data,  //
                       size_t size,  //
@@ -96,7 +97,7 @@ auto init_buffer_sync(CommandManager& commandManager,  //
                       VkAccessFlags dstAccessMask,  //
                       VulkanQueue const& queue  //
                       ) -> void {
-    auto const commandBuffer{commandManager.getCommandBufferBegin()};
+    auto const commandBuffer{get_command_buffer_begin(graphicsManager.device, graphicsManager.commandPool)};
 
     auto const stagingBuffer{init_buffer(commandBuffer,  //
                                          deviceBuffer,  //
@@ -111,14 +112,14 @@ auto init_buffer_sync(CommandManager& commandManager,  //
     return submit_init_data_sync(std::move(cbToStagingBuffers), queue);
 }
 
-auto init_buffer_sync(CommandManager& commandManager,  //
+auto init_buffer_sync(GraphicsManager& graphicsManager,  //
                       DeviceBuffer& deviceBuffer,  //
                       HostVisibleBuffer&& stagingBuffer,  //
                       VkPipelineStageFlags dstStageMask,  //
                       VkAccessFlags dstAccessMask,  //
                       VulkanQueue const& queue  //
                       ) -> void {
-    auto const commandBuffer{commandManager.getCommandBufferBegin()};
+    auto const commandBuffer{get_command_buffer_begin(graphicsManager.device, graphicsManager.commandPool)};
 
     init_buffer(commandBuffer,  //
                 deviceBuffer,  //

@@ -37,7 +37,7 @@ Layer::Layer(graphics::GraphicsManager& graphicsManager,  //
 
         graphicsManager.debugUtils.setName(weights.getBuffer(), "Layer weights.");
 
-        graphics::utils::init_buffer_sync(graphicsManager.commandManager,  //
+        graphics::utils::init_buffer_sync(graphicsManager,  //
                                           weights,  //
                                           reinterpret_cast<uint8_t*>(hdata.data()),  //
                                           hdata.size() * sizeof(float),  //
@@ -54,13 +54,12 @@ Layer::Layer(graphics::GraphicsManager& graphicsManager,  //
         }
 
         biases.init(graphicsManager.allocator,  //
-                    VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT |
-                        VK_BUFFER_USAGE_TRANSFER_SRC_BIT,  //
+                    VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,  //
                     neuronCount * sizeof(float));
 
         graphicsManager.debugUtils.setName(biases.getBuffer(), "Layer biases.");
 
-        graphics::utils::init_buffer_sync(graphicsManager.commandManager,  //
+        graphics::utils::init_buffer_sync(graphicsManager,  //
                                           biases,  //
                                           reinterpret_cast<uint8_t*>(hdata.data()),  //
                                           hdata.size() * sizeof(float),  //
@@ -69,7 +68,7 @@ Layer::Layer(graphics::GraphicsManager& graphicsManager,  //
                                           graphicsManager.computeQueue);
 
         delta.init(graphicsManager.allocator,  //
-                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT,  //
+                   VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,  //
                    neuronCount * sizeof(float));
 
         graphicsManager.debugUtils.setName(delta.getBuffer(), "Layer delta.");
@@ -81,25 +80,25 @@ Layer::Layer(graphics::GraphicsManager& graphicsManager,  //
 
     graphicsManager.debugUtils.setName(values.getBuffer(), "Layer values.");
 
-    for (size_t i{0}; i < m_activateDescriptorSets.size(); ++i) {
-        m_activateDescriptorSets[i] = graphics::allocate_descriptor_set(graphicsManager.device,  //
-                                                                        graphicsManager.descriptorPool,  //
-                                                                        graphicsManager.descriptorSetLayout);
-        graphicsManager.debugUtils.setName(m_activateDescriptorSets[i], fmt::format("Activate descriptor set {}.", i));
-    }
+    m_activateDescriptorSet = graphics::allocate_descriptor_set(graphicsManager.device,  //
+                                                                graphicsManager.descriptorPool,  //
+                                                                graphicsManager.descriptorSetLayout);
+    graphicsManager.debugUtils.setName(m_activateDescriptorSet, "Activate descriptor set.");
 
-    for (size_t i{0}; i < m_updateDescriptorSets.size(); ++i) {
-        m_updateDescriptorSets[i] = graphics::allocate_descriptor_set(graphicsManager.device,  //
-                                                                      graphicsManager.descriptorPool,  //
-                                                                      graphicsManager.descriptorSetLayout);
-        graphicsManager.debugUtils.setName(m_updateDescriptorSets[i], fmt::format("Update descriptor set {}.", i));
-    }
+    m_inferDescriptorSet = graphics::allocate_descriptor_set(graphicsManager.device,  //
+                                                             graphicsManager.descriptorPool,  //
+                                                             graphicsManager.descriptorSetLayout);
+    graphicsManager.debugUtils.setName(m_inferDescriptorSet, "Infer descriptor set.");
+
+    m_updateDescriptorSet = graphics::allocate_descriptor_set(graphicsManager.device,  //
+                                                              graphicsManager.descriptorPool,  //
+                                                              graphicsManager.descriptorSetLayout);
+    graphicsManager.debugUtils.setName(m_updateDescriptorSet, "Update descriptor set.");
 }
 
 auto Layer::activate(graphics::GraphicsManager const& graphicsManager,  //
                      VkCommandBuffer commandBuffer,  //
                      Layer const& prevLayer,  //
-                     uint32_t iterationIndex,  //
                      graphics::DeviceBuffer const& batchIndex,  //
                      bool infer  //
                      ) -> void {
@@ -108,6 +107,9 @@ auto Layer::activate(graphics::GraphicsManager const& graphicsManager,  //
     }
 
     // the very first layer - input - comes in batches
+    // in this case, for the first hidden layer, we should offset the input
+    // for all other layers we should not add an offset
+    // see forward.comp
     bool const batchedInput{prevLayer.inputSize() == 0};
 
     // see forward.comp
@@ -122,34 +124,39 @@ auto Layer::activate(graphics::GraphicsManager const& graphicsManager,  //
                        static_cast<uint32_t>(pushConstData.size()),  //
                        pushConstData.data());
 
-    auto const currDescriptorSet{m_activateDescriptorSets[iterationIndex]};
+    VkDescriptorSet descriptorSet{VK_NULL_HANDLE};
 
-    if (!m_descSetToUpdated[currDescriptorSet] || infer) {
-        m_descSetToUpdated[currDescriptorSet] = true;
+    if (infer) {
+        descriptorSet = m_inferDescriptorSet;
 
-        graphics::utils::BufferUpdateInfo const weightsBufferUpdateInfo{weights.getBuffer(),  //
-                                                                        weights.getSize(),  //
-                                                                        0};
-        graphics::utils::BufferUpdateInfo const biasesBufferUpdateInfo{biases.getBuffer(),  //
-                                                                       biases.getSize(),  //
-                                                                       0};
-        graphics::utils::BufferUpdateInfo const inputValuesBufferUpdateInfo{prevLayer.values.getBuffer(),  //
-                                                                            prevLayer.values.getSize(),  //
-                                                                            0};
-        graphics::utils::BufferUpdateInfo const valuesBufferUpdateInfo{values.getBuffer(),  //
-                                                                       values.getSize(),  //
-                                                                       0};
-        graphics::utils::BufferUpdateInfo const batchIndexBufferUpdateInfo{batchIndex.getBuffer(),  //
-                                                                           batchIndex.getSize(),  //
-                                                                           0};
+        // Lazy update: it's enough to update the set once, all followed calls will use the same descriptor set
+        if (!m_inferDescriptorSetUpdated) {
+            m_inferDescriptorSetUpdated = true;
 
-        graphics::utils::update_descriptor_set(graphicsManager.device,  //
-                                               currDescriptorSet,  //
-                                               weightsBufferUpdateInfo,  //
-                                               biasesBufferUpdateInfo,  //
-                                               inputValuesBufferUpdateInfo,  //
-                                               valuesBufferUpdateInfo,  //
-                                               batchIndexBufferUpdateInfo);
+            // it's enough to update the set once, all followed calls will use the same descriptor set
+            graphics::utils::update_descriptor_set(graphicsManager.device,  //
+                                                   m_inferDescriptorSet,  //
+                                                   weights,  //
+                                                   biases,  //
+                                                   prevLayer.values,  //
+                                                   values,  //
+                                                   batchIndex);
+        }
+    } else {
+        descriptorSet = m_activateDescriptorSet;
+
+        // Lazy update: it's enough to update the set once, all followed calls will use the same descriptor set
+        if (!m_activateDescriptorSetUpdated) {
+            m_activateDescriptorSetUpdated = true;
+
+            graphics::utils::update_descriptor_set(graphicsManager.device,  //
+                                                   m_activateDescriptorSet,  //
+                                                   weights,  //
+                                                   biases,  //
+                                                   prevLayer.values,  //
+                                                   values,  //
+                                                   batchIndex);
+        }
     }
 
     vkCmdBindDescriptorSets(commandBuffer,  //
@@ -157,7 +164,7 @@ auto Layer::activate(graphics::GraphicsManager const& graphicsManager,  //
                             graphicsManager.pipelineLayout,  //
                             0,  //
                             1,  //
-                            &currDescriptorSet,  //
+                            &descriptorSet,  //
                             0,  //
                             nullptr);
 
@@ -177,8 +184,8 @@ auto Layer::activate(graphics::GraphicsManager const& graphicsManager,  //
                                         VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,  //
                                         VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT);
 
-    // set barrier for a previous layer
-    if (prevLayer.values.getBuffer() != VK_NULL_HANDLE) {
+    // if previous layer - input layer - no need in barrier, since its values never change
+    if (prevLayer.inputSize() != 0) {
         graphics::utils::set_buffer_barrier(commandBuffer,  //
                                             prevLayer.values,  //
                                             VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,  //
@@ -196,7 +203,6 @@ auto Layer::update(graphics::GraphicsManager const& graphicsManager,  //
                    VkCommandBuffer commandBuffer,  //
                    Layer const& prevLayer,  //
                    float learningRate,  //
-                   uint32_t iterationIndex,  //
                    graphics::DeviceBuffer const& batchIndex  //
                    ) -> void {
     if (delta.getSize() != size() * sizeof(float)) {
@@ -204,6 +210,9 @@ auto Layer::update(graphics::GraphicsManager const& graphicsManager,  //
     }
 
     // the very first layer - input - comes in batches
+    // in this case, for the first hidden layer, we should offset the input
+    // for all other layers we should not add an offset
+    // see forward.comp
     bool const batchedInput{prevLayer.inputSize() == 0};
 
     // see forward.comp
@@ -219,34 +228,17 @@ auto Layer::update(graphics::GraphicsManager const& graphicsManager,  //
                        static_cast<uint32_t>(pushConstData.size()),  //
                        pushConstData.data());
 
-    auto const currDescriptorSet{m_updateDescriptorSets[iterationIndex]};
-
-    if (!m_descSetToUpdated[currDescriptorSet]) {
-        m_descSetToUpdated[currDescriptorSet] = true;
-
-        graphics::utils::BufferUpdateInfo const weightsBufferUpdateInfo{weights.getBuffer(),  //
-                                                                        weights.getSize(),  //
-                                                                        0};
-        graphics::utils::BufferUpdateInfo const biasesBufferUpdateInfo{biases.getBuffer(),  //
-                                                                       biases.getSize(),  //
-                                                                       0};
-        graphics::utils::BufferUpdateInfo const inputValuesBufferUpdateInfo{prevLayer.values.getBuffer(),  //
-                                                                            prevLayer.values.getSize(),  //
-                                                                            0};
-        graphics::utils::BufferUpdateInfo const deltaBufferUpdateInfo{delta.getBuffer(),  //
-                                                                      delta.getSize(),  //
-                                                                      0};
-        graphics::utils::BufferUpdateInfo const batchIndexBufferUpdateInfo{batchIndex.getBuffer(),  //
-                                                                           batchIndex.getSize(),  //
-                                                                           0};
+    // Lazy update: it's enough to update the set once, all followed calls will use the same descriptor set
+    if (!m_updateDescriptorSetUpdated) {
+        m_updateDescriptorSetUpdated = true;
 
         graphics::utils::update_descriptor_set(graphicsManager.device,  //
-                                               currDescriptorSet,  //
-                                               weightsBufferUpdateInfo,  //
-                                               biasesBufferUpdateInfo,  //
-                                               inputValuesBufferUpdateInfo,  //
-                                               deltaBufferUpdateInfo,  //
-                                               batchIndexBufferUpdateInfo);
+                                               m_updateDescriptorSet,  //
+                                               weights,  //
+                                               biases,  //
+                                               prevLayer.values,  //
+                                               delta,  //
+                                               batchIndex);
     }
 
     vkCmdBindDescriptorSets(commandBuffer,  //
@@ -254,7 +246,7 @@ auto Layer::update(graphics::GraphicsManager const& graphicsManager,  //
                             graphicsManager.pipelineLayout,  //
                             0,  //
                             1,  //
-                            &currDescriptorSet,  //
+                            &m_updateDescriptorSet,  //
                             0,  //
                             nullptr);
 
@@ -277,16 +269,8 @@ auto Layer::size() const noexcept -> size_t {
     return m_size;
 }
 
-auto Layer::sizeBytes() const noexcept -> size_t {
-    return m_size * sizeof(float);
-}
-
 auto Layer::inputSize() const noexcept -> size_t {
     return m_inputSize;
-}
-
-auto Layer::inputSizeBytes() const noexcept -> size_t {
-    return m_inputSize * sizeof(float);
 }
 
 auto Layer::clear() noexcept -> void {

@@ -1,6 +1,6 @@
 #version 450
 
-#extension GL_EXT_debug_printf : enable
+// #extension GL_EXT_debug_printf : enable
 
 layout (local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
@@ -11,16 +11,6 @@ layout (set = 0, binding = 0) buffer BatchIndex {
 layout(set = 0, binding = 1) readonly buffer BatchIndices
 {
     uint batchIndices[];
-};
-
-layout(set = 0, binding = 2) readonly buffer Unused1
-{
-    float unused1[];
-};
-
-layout(set = 0, binding = 3) readonly buffer Unused2
-{
-    float unused2[];
 };
 
 void main() {

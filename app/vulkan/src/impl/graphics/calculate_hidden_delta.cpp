@@ -41,27 +41,13 @@ auto calculate_hidden_delta(GraphicsManager& graphicsManager,  //
     if (!m_descSetToUpdated[descriptorSet]) {
         m_descSetToUpdated[descriptorSet] = true;
 
-        // see delta.comp
-        graphics::utils::BufferUpdateInfo const neigbourWeightsBufferUpdateInfo{neighbourWeights.getBuffer(),  //
-                                                                                neighbourWeights.getSize(),  //
-                                                                                0};
-        graphics::utils::BufferUpdateInfo const valuesBufferUpdateInfo{values.getBuffer(),  //
-                                                                       values.getSize(),  //
-                                                                       0};
-        graphics::utils::BufferUpdateInfo const neighbourDeltaBufferUpdateInfo{neighbourDelta.getBuffer(),  //
-                                                                               neighbourDelta.getSize(),  //
-                                                                               0};
-        graphics::utils::BufferUpdateInfo const deltaBufferUpdateInfo{delta.getBuffer(),  //
-                                                                      delta.getSize(),  //
-                                                                      0};
-
         utils::update_descriptor_set(graphicsManager.device,  //
                                      descriptorSet,  //
-                                     neigbourWeightsBufferUpdateInfo,  //
-                                     valuesBufferUpdateInfo,  //
-                                     neighbourDeltaBufferUpdateInfo,  //
-                                     deltaBufferUpdateInfo,  //
-                                     deltaBufferUpdateInfo);  // not used by this dispatch
+                                     neighbourWeights,  //
+                                     values,  //
+                                     neighbourDelta,  //
+                                     delta,  //
+                                     delta);  // not used by this dispatch
     }
 
     vkCmdBindDescriptorSets(commandBuffer,  //
