@@ -14,7 +14,7 @@ auto shuffle_indices(std::vector<size_t>& indices) noexcept -> void {
     std::shuffle(indices.begin(), indices.end(), engine);
 }
 
-auto print_matrix(impl::Layer::MatrixX const& m) -> void {
+[[maybe_unused]] auto print_matrix(impl::Layer::MatrixX const& m) -> void {
     std::cout << "[";
     for (int r{0}; r < m.rows(); ++r) {
         for (int c{0}; c < m.cols(); ++c) {
@@ -200,8 +200,6 @@ auto NeuralNetwork::backward(std::vector<common::Float> const& output,  //
                 return false;
             }
         }
-
-        print_matrix(layers[2].biases);
     }
 
     return true;
