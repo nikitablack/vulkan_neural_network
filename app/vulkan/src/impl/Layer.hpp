@@ -2,7 +2,6 @@
 
 #include <array>
 #include <impl/graphics/DeviceBuffer.hpp>
-#include <impl/graphics/constants.hpp>
 #include <unordered_map>
 #include <vector>
 
