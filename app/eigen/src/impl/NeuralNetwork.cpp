@@ -103,7 +103,7 @@ auto NeuralNetwork::train(std::vector<std::vector<common::Float>> const& input, 
 
         Float epochLoss{0.0};
 
-        for (size_t i{0}; i < 100 /*indices.size()*/; ++i) {
+        for (size_t i{0}; i < indices.size(); ++i) {
             auto const idx{indices[i]};
 
             if (!forward(input[idx], output)) {
