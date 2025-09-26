@@ -204,6 +204,9 @@ auto NeuralNetwork::train(graphics::GraphicsManager& graphicsManager,  //
     for (size_t epoch{0}; epoch < epochCount; ++epoch) {
         fmt::println("epoch {}", epoch);
 
+        common::Timer epochTimer{};
+        epochTimer.start();
+
         // For each epoch, the indices are different.
         // We need to upload upload the to the GPU each epoch.
         {
@@ -240,6 +243,8 @@ auto NeuralNetwork::train(graphics::GraphicsManager& graphicsManager,  //
         }
 
         shuffle_indices(indices);
+
+        fmt::println("Epoch {}:\n\tepoch time: {:.2f} ms", epoch, epochTimer.stop());
     }
 
     auto const totalTimeMs{totalTimer.stop()};
